@@ -6,15 +6,77 @@
   
   <title>bank blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="行至水穷处,坐看云起时">
-<meta property="og:type" content="website">
+  <meta name="description" content="MySQL是怎样运行的@TOC 字符集和比较规则mysql中支持多种字符集，每种字符集支持几种比较规则；&#x3D;&#x3D;查询的时候发现排序结果不符合预期，可以看下比较规则是否符合预期&#x3D;&#x3D;其中default collection表示默认的比较规则；（后缀_ci表示比较时不区分大小写）        maxlen表示所占字符大小； 如：  utf8mb3:使用1～3个字节表">
+<meta property="og:type" content="article">
 <meta property="og:title" content="bank blog">
-<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:url" content="http://example.com/2023/05/15/MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84/index.html">
 <meta property="og:site_name" content="bank blog">
-<meta property="og:description" content="行至水穷处,坐看云起时">
+<meta property="og:description" content="MySQL是怎样运行的@TOC 字符集和比较规则mysql中支持多种字符集，每种字符集支持几种比较规则；&#x3D;&#x3D;查询的时候发现排序结果不符合预期，可以看下比较规则是否符合预期&#x3D;&#x3D;其中default collection表示默认的比较规则；（后缀_ci表示比较时不区分大小写）        maxlen表示所占字符大小； 如：  utf8mb3:使用1～3个字节表">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ea85e7be4cb149f7a4275960f6f5560c.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f6cff671cd624accb6baef4371c7e34a.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/bb368f0496fa41febd32550859c25d39.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b9261258f6f34918af73db3cd7714494.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/96938fcbafbd485d8f4e5b8e8b34ebb5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fdd675f101354bf694a685eaf985e434.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/22fe2129d905435b8f926696a4dbb1c5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5c9937594c6e4dc2ab961b44ba34ad62.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/06ba6a4095dc4fa78779b97efe619c6c.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5e68f269342b40099a206fb3f7fe2121.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/af48204752e6427eb6ee931d452c2683.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9a1db5a4a33e45d9967651551423089d.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/8cfbb687bebb457fadd3538da13d67ae.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6d3b498ab7434f2ebb48f09e7cbbb7c2.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/c3003a44da464c9b90bf773fdda09d35.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b912ac44b0514d3bba2f8d92e505e6de.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2f552d75baa440f99bf32d8123e1042d.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ac20007193db442ab54f020247ffdef0.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/696021aa83e0460fb74048c7f4337e71.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ad63a9c5a1df4b4586c16615ee5558d1.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/426c798367dd4fdfa472303956b5d30f.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/613cc51487444a73b39e581b401d07ed.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5365b7c09bad4cdba22e92e4ae69b5c5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5b7aa04038464c6a8535a28c802ff777.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/089e419ba95a4e6da4593ff2775e2913.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/9b6e5bc105dc4d808df1d6ab87456b70.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6defd7ff362b4222b0794195719d79e5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/411e7979f1ac4c3f92061b7b852ef00e.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/681b7fc8ee6142c0b57a5262814ef53f.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/5d95a4d78b9243e6b02d7b4aa250602b.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/8ce7f1bc20044bc380a48af71021fa9e.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/50308ffbc5aa4946a488e7a81bfdae29.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b00bc18f18794462a9c6f39f9e0311c0.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/58e8357d2ff54c66b0d56260df6a6873.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2de009dfd5e2417bbb91c02208fafca0.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e30dfffb05e74c5cbc31ba773e33af39.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a6d449c7316e44be8c055aca7fd2b790.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/94e535876b6446778070464136ea77ba.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/b85b94c586ee40aba9bd74adc2dc5c19.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a976729f0f44490b849501fbbbf0d282.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/fa75bf55ed7441b39a8fbc195596427d.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a2233f7ca09f4cfbbe4ec137c223952d.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2718317a0f1d48d7ae425b2a30ec548a.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/d05ac3bc42d34d868063833a3fec4aa0.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/032f0d569fe74109b1f5ebec62affd9e.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/858f3129cca04361891c7719cf9e03ef.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f12f5951c71e482ea8ae19151b6f68cd.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/819b55f00839450e94b431636054128c.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/10a6cb0b8f3045c68667cc52dc0566c5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2e533d88bd1d4fcaab8838ea30e1b797.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/6e3351bebc194e14915f784d1422de84.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/75903b63b1b94199bfd51420d8b96657.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/e4c8948dd73f41e5941d68695c2276e4.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/bd9e0f223b7c427a9fe67a1ae15944a5.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/cf4e8b4691de4720b4c86c482a51b5c7.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f90e8a18f63e4180a35bcdba533cc6cf.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a7361b9d54994d4b9bbcdb665f7617ac.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/574f9b294c5f42b69575e4ae8376061e.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/f9b4b6509220448cb1488fda940ade8c.png">
+<meta property="article:published_time" content="2023-05-15T14:32:15.854Z">
+<meta property="article:modified_time" content="2023-05-15T14:32:15.855Z">
 <meta property="article:author" content="bank">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/ea85e7be4cb149f7a4275960f6f5560c.png">
   
     <link rel="alternate" href="/atom.xml" title="bank blog" type="application/atom+xml">
   
@@ -73,9 +135,7 @@
 </header>
 
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-MySQL是怎样运行的" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-MySQL是怎样运行的" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2023/05/15/MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84/" class="article-date">
   <time class="dt-published" datetime="2023-05-15T14:32:15.854Z" itemprop="datePublished">2023-05-15</time>
@@ -1722,62 +1782,19 @@
     </footer>
   </div>
   
-</article>
-
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-hello-world" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2023/05/15/hello-world/" class="article-date">
-  <time class="dt-published" datetime="2023-05-15T12:20:42.648Z" itemprop="datePublished">2023-05-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2023/05/15/hello-world/">Hello World</a>
-    </h1>
+    <a href="/2023/05/15/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">Hello World</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2023/05/15/hello-world/" data-id="clhoy32wo0000fam52kgu5r49" data-title="Hello World" class="article-share-link"><span class="fa fa-share">分享</span></a>
-      
-      
-      
-    </footer>
-  </div>
   
 </article>
-
-
-
-  
 
 
 </section>
