@@ -178,7 +178,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-16 10:46:02" itemprop="dateModified" datetime="2023-05-16T10:46:02+08:00">2023-05-16</time>
+                <time title="修改时间：2023-05-16 11:59:46" itemprop="dateModified" datetime="2023-05-16T11:59:46+08:00">2023-05-16</time>
               </span>
 
           
@@ -192,8 +192,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="MySQL是怎样运行的"><a href="#MySQL是怎样运行的" class="headerlink" title="MySQL是怎样运行的"></a>MySQL是怎样运行的</h1><p>@<a href="%E7%9B%AE%E5%BD%95">TOC</a></p>
-<h1 id="字符集和比较规则"><a href="#字符集和比较规则" class="headerlink" title="字符集和比较规则"></a>字符集和比较规则</h1><p>mysql中支持多种字符集，每种字符集支持几种比较规则；<br>&#x3D;&#x3D;<em>查询的时候发现排序结果不符合预期，可以看下比较规则是否符合预期</em>&#x3D;&#x3D;<br><img src="https://img-blog.csdnimg.cn/ea85e7be4cb149f7a4275960f6f5560c.png" alt="一些常用的字符集及比较规则">其中default collection表示默认的比较规则；（后缀_ci表示比较时不区分大小写）<br>        maxlen表示所占字符大小；</p>
+          <meta name="referrer" content="no-referrer"/>
+# MySQL是怎样运行的
+# 字符集和比较规则
+mysql中支持多种字符集，每种字符集支持几种比较规则；
+**查询的时候发现排序结果不符合预期，可以看下比较规则是否符合预期**
+
+<p><img src="https://img-blog.csdnimg.cn/ea85e7be4cb149f7a4275960f6f5560c.png" alt="一些常用的字符集及比较规则"><br>其中default collection表示默认的比较规则；（后缀_ci表示比较时不区分大小写）<br>        maxlen表示所占字符大小；</p>
 <p>如：</p>
 <ul>
 <li>utf8mb3:使用1～3个字节表示字符；</li>
