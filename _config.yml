@@ -3,13 +3,13 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
+title: bank blog
 subtitle: ''
-description: ''
+description: 行至水穷处,坐看云起时
 keywords:
-author: John Doe
-language: en
-timezone: ''
+author: bank
+language: zh-CN
+timezone: Asia/shanghai
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
@@ -97,11 +97,11 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: landscape
+theme: cactus
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repository: https://github.com/rh670892215/rh670892215.github.io.git #你的仓库地址
-  branch: master
+  repository: git@github.com:rh670892215/rh670892215.github.io.git #你的仓库地址
+  branch: main
