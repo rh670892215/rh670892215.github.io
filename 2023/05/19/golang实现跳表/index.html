@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="golang实现跳表">
+<meta property="og:url" content="http://example.com/2023/05/19/golang%E5%AE%9E%E7%8E%B0%E8%B7%B3%E8%A1%A8/index.html">
+<meta property="og:site_name" content="bank blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/skiplist.resources/skiplist_struct.gif">
+<meta property="article:published_time" content="2023-05-19T07:25:16.987Z">
+<meta property="article:modified_time" content="2023-05-21T11:21:52.095Z">
+<meta property="article:author" content="bank">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/skiplist.resources/skiplist_struct.gif">
+
+<link rel="canonical" href="http://example.com/2023/05/19/golang%E5%AE%9E%E7%8E%B0%E8%B7%B3%E8%A1%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>golang实现跳表 | bank blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">bank blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/05/19/golang%E5%AE%9E%E7%8E%B0%E8%B7%B3%E8%A1%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="bank">
+      <meta itemprop="description" content="行至水穷处,坐看云起时">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="bank blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          golang实现跳表
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-19 15:25:16" itemprop="dateCreated datePublished" datetime="2023-05-19T15:25:16+08:00">2023-05-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-05-21 19:21:52" itemprop="dateModified" datetime="2023-05-21T19:21:52+08:00">2023-05-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/golang/" itemprop="url" rel="index"><span itemprop="name">golang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <meta name="referrer" content="no-referrer"/>
+
+<span id="more"></span>
+<h1 id="golang实现跳表"><a href="#golang实现跳表" class="headerlink" title="golang实现跳表"></a>golang实现跳表</h1><h2 id="跳表介绍"><a href="#跳表介绍" class="headerlink" title="跳表介绍"></a>跳表介绍</h2><p>redis中的跳表是redis的一个亮点，在这篇论文中首次被提出<a target="_blank" rel="noopener" href="https://www.cl.cam.ac.uk/teaching/0506/Algorithms/skiplists.pdf">《Skip lists: a probabilistic alternative to balanced trees》</a>，跳表以有序的方式在层次化的链表中保存元素， 效率和平衡树媲美 —— 查找、删除、添加等操作都可以在O(logN)期望时间下完成。跳表详细介绍可以看<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/9d8296562806">跳表介绍</a>，我在学习了<a target="_blank" rel="noopener" href="https://github.com/chen3feng/stl4go/blob/master/skiplist.go">https://github.com/chen3feng/stl4go/blob/master/skiplist.go</a>和<a target="_blank" rel="noopener" href="https://github.com/liyue201/gostl/blob/master/ds/skiplist/skiplist.go">https://github.com/liyue201/gostl/blob/master/ds/skiplist/skiplist.go</a>两位大佬的实现后，对其核心功能研究后，进行复现，以下记录下我对代码的理解和复现过程。</p>
+<p>为了方便后续的理解，这里附一张跳表结构图:</p>
+<p><img src="/skiplist.resources/skiplist_struct.gif" alt="跳表结构"></p>
+<h2 id="跳表的golang实现"><a href="#跳表的golang实现" class="headerlink" title="跳表的golang实现"></a>跳表的golang实现</h2><h3 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SkipList 跳表</span></span><br><span class="line"><span class="keyword">type</span> SkipList[K, V any] <span class="keyword">struct</span> &#123;</span><br><span class="line">	head         node[K, V]</span><br><span class="line">	level        <span class="type">int</span></span><br><span class="line">	<span class="built_in">len</span>          <span class="type">int</span></span><br><span class="line">	random       *rand.Rand</span><br><span class="line">	skipListImpl skipListImpl[K, V]</span><br><span class="line">	prevsCache   []*node[K, V]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 跳表节点</span></span><br><span class="line"><span class="keyword">type</span> node[K, V any] <span class="keyword">struct</span> &#123;</span><br><span class="line">	key   K</span><br><span class="line">	value V</span><br><span class="line">	next  []*node[K, V]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 跳表相关内部方法的实现接口</span></span><br><span class="line"><span class="keyword">type</span> skipListImpl[K, V any] <span class="keyword">interface</span> &#123;</span><br><span class="line">	findNode(key K) *node[K, V]</span><br><span class="line">	findInsertPoint(key K) (*node[K, V], []*node[K, V])</span><br><span class="line">	findRemovePoint(key K) (*node[K, V], []*node[K, V])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> skipListOrder[K types.Order, V any] <span class="keyword">struct</span> &#123;</span><br><span class="line">	SkipList[K, V]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>一般的实现方式都是这样，把索引节点实现成最底层节点的一个数组，这样每个元素只需要一个节点，避免了内存开销。如第i层的索引节点就存储在head.next[i]的next[i]中；</li>
+<li>其中skipListImpl接口实现了跳表操作的底层逻辑，在SkipList层进行封装；</li>
+<li>golang1.18中引入了泛型，所以使用自己声明的<code>order</code>类型对可以进行排序的golang类型进行限制；</li>
+</ul>
+<h3 id="初始化跳表"><a href="#初始化跳表" class="headerlink" title="初始化跳表"></a>初始化跳表</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewSkipList</span>[<span class="title">K</span> <span class="title">types</span>.<span class="title">Order</span>, <span class="title">V</span> <span class="title">any</span>]<span class="params">()</span></span> *SkipList[K, V] &#123;</span><br><span class="line">	sl := skipListOrder[K, V]&#123;&#125;</span><br><span class="line">	sl.init()</span><br><span class="line">	sl.skipListImpl = (skipListImpl[K, V])(&amp;sl)</span><br><span class="line">	<span class="keyword">return</span> &amp;sl.SkipList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sl *SkipList[K, V])</span></span> init() &#123;</span><br><span class="line">	sl.level = <span class="number">1</span></span><br><span class="line">	sl.<span class="built_in">len</span> = <span class="number">0</span></span><br><span class="line">	sl.random = rand.New(rand.NewSource(time.Now().Unix()))</span><br><span class="line">	sl.head.next = <span class="built_in">make</span>([]*node[K, V], SkipListMaxLevel)</span><br><span class="line">	sl.prevsCache = <span class="built_in">make</span>([]*node[K, V], SkipListMaxLevel)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>初始化函数中level、len、random、head.next的初始化都不难理解，这里简单介绍一下prevsCache的作用，在跳表的实现方案中一半都加入一个这个缓存字段，预先申请一块内存空间，用来在查找指定节点时存储其前置节点，防止每次都频繁申请内存，后续我测试了一下，预先申请一块内存的方式的确性能提升比较明显。</p>
+<h3 id="随机level"><a href="#随机level" class="headerlink" title="随机level"></a>随机level</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sl *SkipList[K, V])</span></span> randomLevel() <span class="type">int</span> &#123;</span><br><span class="line">    <span class="comment">//方案一</span></span><br><span class="line">	<span class="comment">// total := uint64(1)&lt;&lt;uint64(SkipListMaxLevel) - 1 // 2^n - 1</span></span><br><span class="line">	<span class="comment">// k := sl.random.Uint64() % total</span></span><br><span class="line">	<span class="comment">// levelDivide := uint64(1) &lt;&lt; (uint64(SkipListMaxLevel) - 1)</span></span><br><span class="line">	<span class="comment">// level := 1</span></span><br><span class="line">	<span class="comment">// for total -= levelDivide; total &gt; k; level++ &#123;</span></span><br><span class="line">	<span class="comment">// 	levelDivide &gt;&gt;= 1</span></span><br><span class="line">	<span class="comment">// 	total -= levelDivide</span></span><br><span class="line">	<span class="comment">// &#125;</span></span><br><span class="line">	<span class="comment">//return level</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//方案二</span></span><br><span class="line">	total := <span class="type">uint64</span>(<span class="number">1</span>)&lt;&lt;<span class="type">uint64</span>(SkipListMaxLevel) - <span class="number">1</span> <span class="comment">// 2^n-1</span></span><br><span class="line">	k := sl.random.Uint64() % total</span><br><span class="line">	level := SkipListMaxLevel - bits.Len64(k) + <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> level &gt; <span class="number">3</span> &amp;&amp; <span class="number">1</span>&lt;&lt;(level<span class="number">-3</span>) &gt; sl.<span class="built_in">len</span> &#123;</span><br><span class="line">		level--</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> level</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里我们来研究一下，首先介绍一下方案一的实现思路：<br><strong>方案一：</strong>（为方便说明，以下的SkipListMaxLevel&#x3D;10）</p>
+<ol>
+<li>计算2^n - 1，即2^n - 1 &#x3D; 1023；</li>
+<li>接着对随机数取余，也就是将生成的随机数映射到0～1023内；</li>
+<li>首先计算第一条“分界线”，得512；（生成的随机数越小，level越高）</li>
+<li>接着不断缩小范围区间，一次缩小一半，直到找到随机数所在的区间，其概率如下：<ul>
+<li>512&lt;k&lt;1023之间的概率为1&#x2F;2，level&#x3D;1</li>
+<li>256&lt;k&lt;511之间的概率为1&#x2F;4，level&#x3D;2</li>
+<li>128&lt;k&lt;255之间的概率为1&#x2F;8，level&#x3D;3</li>
+<li>…</li>
+</ul>
+</li>
+</ol>
+<p><strong>方案二：</strong></p>
+<ul>
+<li>性能优化，在寻找所属范围的时候有不断除以2的操作，也就是右移一位，因此我们可以通过判断位数来实现确定范围，这里使用<code>bits.Len64()</code>函数，其底层使用查表的方式实现，减少了循环，可以提升性能；</li>
+<li>性能优化，使用动态的level，而不是限制死level，这样在查找的时候防止存在多个nil的节点，提升查找速度，这里限制level &gt; log2(len)，其表达方式是<code>1&lt;&lt;(level-3) &gt; sl.len</code>（1右移几位就是2的几次方，再同时两边取log试试～），level与next数组索引的关系是<code>index = level - 1</code>；</li>
+</ul>
+<h3 id="查找"><a href="#查找" class="headerlink" title="查找"></a>查找</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Get 查找节点</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sl *SkipList[K, V])</span></span> Get(key K) *V &#123;</span><br><span class="line">	targetNode := sl.skipListImpl.findNode(key)</span><br><span class="line">	<span class="keyword">if</span> targetNode == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> &amp;targetNode.value</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(slo *skipListOrder[K, V])</span></span> findNode(key K) *node[K, V] &#123;</span><br><span class="line">	<span class="keyword">return</span> slo.doFindNode(key, <span class="literal">true</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(slo *skipListOrder[K, V])</span></span> doFindNode(key K, eq <span class="type">bool</span>) *node[K, V] &#123;</span><br><span class="line">	prev := &amp;slo.head</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 从上往下找,逐层级遍历</span></span><br><span class="line">	<span class="keyword">for</span> i := slo.level - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i-- &#123;</span><br><span class="line">		<span class="keyword">for</span> cur := prev.next[i]; cur != <span class="literal">nil</span>; cur = cur.next[i] &#123;</span><br><span class="line">			<span class="keyword">if</span> cur.key == key &#123;</span><br><span class="line">				<span class="keyword">return</span> cur</span><br><span class="line">			&#125;</span><br><span class="line">            <span class="comment">// 该节点的key已经大于目标节点,本层不可能存在目标节点了,继续去下一层寻找</span></span><br><span class="line">			<span class="keyword">if</span> cur.key &gt; key &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			prev = cur</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> eq &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> prev.next[<span class="number">0</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>整体流程并不难理解，其中eq标志位用来控制若不存在目标节点，是否输出一个大于目标节点的节点，其查找过程中的for循环我们来介绍一下：<br>从最顶层开始查找，逐层向下寻找，本层查找完毕的终止条件有两个：</p>
+<ul>
+<li>查找到目标节点；</li>
+<li>本层后面的节点全部大大于目标节点；</li>
+</ul>
+<p>其中的<code>prev = cur</code>用于记录目标节点的近似节点，这里使用标志位来控制函数流程并不优雅，违反了《代码整洁之道》书中的建议，但是这么进行实现性能的确会更好。</p>
+<h3 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Insert 插入节点</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sl *SkipList[K, V])</span></span> Insert(key K, value V) &#123;</span><br><span class="line">	targetNode, prevNodes := sl.skipListImpl.findInsertPoint(key)</span><br><span class="line">	<span class="keyword">if</span> targetNode != <span class="literal">nil</span> &#123;</span><br><span class="line">		targetNode.value = value</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	targetLevel := sl.randomLevel()</span><br><span class="line">	targetNode = newSkipList[K, V](targetLevel, key, value)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; types.Min(targetLevel, sl.level); i++ &#123;</span><br><span class="line">		targetNode.next[i] = prevNodes[i].next[i]</span><br><span class="line">		prevNodes[i].next[i] = targetNode</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> targetLevel &gt; sl.level &#123;</span><br><span class="line">		<span class="keyword">for</span> i := sl.level; i &lt; targetLevel; i++ &#123;</span><br><span class="line">			sl.head.next[i] = targetNode</span><br><span class="line">		&#125;</span><br><span class="line">		sl.level = targetLevel</span><br><span class="line">	&#125;</span><br><span class="line">	sl.<span class="built_in">len</span>++</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查找待插入节点的插入位置,如果节点已存在则返回该节点,如果节点不存在则返回待插入位置的前置指针</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(slo *skipListOrder[K, V])</span></span> findInsertPoint(key K) (*node[K, V], []*node[K, V]) &#123;</span><br><span class="line">	<span class="comment">//prevs := make([]*node[K, V], slo.level)</span></span><br><span class="line">	prevs := slo.prevsCache[<span class="number">0</span>:slo.level]</span><br><span class="line">	prev := &amp;slo.head</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := slo.level - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i-- &#123;</span><br><span class="line">		<span class="keyword">for</span> next := prev.next[i]; next != <span class="literal">nil</span>; next = next.next[i] &#123;</span><br><span class="line">			<span class="keyword">if</span> next.key == key &#123;</span><br><span class="line">				<span class="keyword">return</span> next, <span class="literal">nil</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> next.key &gt; key &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			prev = next</span><br><span class="line">		&#125;</span><br><span class="line">		prevs[i] = prev</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, prevs</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newSkipList</span>[<span class="title">K</span> <span class="title">any</span>, <span class="title">V</span> <span class="title">any</span>]<span class="params">(level <span class="type">int</span>, key K, value V)</span></span> *node[K, V]&#123;</span><br><span class="line">    <span class="keyword">switch</span> level &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">		n := <span class="keyword">struct</span> &#123;</span><br><span class="line">			head  node[K, V]</span><br><span class="line">			nexts [<span class="number">1</span>]*node[K, V]</span><br><span class="line">		&#125;&#123;head: node[K, V]&#123;key, value, <span class="literal">nil</span>&#125;&#125;</span><br><span class="line">		n.head.next = n.nexts[:]</span><br><span class="line">		<span class="keyword">return</span> &amp;n.head</span><br><span class="line">	<span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">		n := <span class="keyword">struct</span> &#123;</span><br><span class="line">			head  node[K, V]</span><br><span class="line">			nexts [<span class="number">2</span>]*node[K, V]</span><br><span class="line">		&#125;&#123;head: node[K, V]&#123;key, value, <span class="literal">nil</span>&#125;&#125;</span><br><span class="line">		n.head.next = n.nexts[:]</span><br><span class="line">		<span class="keyword">return</span> &amp;n.head</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码结构比较清晰，我们来介绍一下几处细节：</p>
+<ul>
+<li>待插入位置的查找：和上面的查找流程一致，若目标节点不存在，我们需要查出每层中最后一个小于待插入节点的节点；</li>
+<li>节点的插入：由于是动态层级，我们需要取最高层级和目标层级的较小者，然后从上而下的逐层插入节点；</li>
+<li>层级修改：若目标层级比最高层级大，那就需要对head节点的next数组、level属性进行调整；</li>
+<li>节点的初始化：根据不同的深度，定义不同的结构体，额外包含一个相应长度的nexts节点指针数组，然后在node的next切片指向这个数组，可以就减少一次内存分配。并且由于nexts数组和node的地址是在一起的，cache局部性也更好。</li>
+</ul>
+<h3 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Remove 移除节点</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(sl *SkipList[K, V])</span></span> Remove(key K) <span class="type">bool</span> &#123;</span><br><span class="line">	targetNode, targetNodePrevs := sl.skipListImpl.findRemovePoint(key)</span><br><span class="line">	<span class="keyword">if</span> targetNode == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i, cur := <span class="keyword">range</span> targetNode.next &#123;</span><br><span class="line">		targetNodePrevs[i].next[i] = cur</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//调整level,这里要用for循环逐层清理,不要用if,否则会只清理顶层</span></span><br><span class="line">	<span class="keyword">for</span> sl.level &gt; <span class="number">1</span> &amp;&amp; sl.head.next[sl.level<span class="number">-1</span>] == <span class="literal">nil</span> &#123;</span><br><span class="line">		sl.level--</span><br><span class="line">	&#125;</span><br><span class="line">	sl.<span class="built_in">len</span>--</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查找待删除节点的位置</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(slo *skipListOrder[K, V])</span></span> findRemovePoint(key K) (*node[K, V], []*node[K, V]) &#123;</span><br><span class="line">	prevs := slo.findPrePoint(key)</span><br><span class="line">	targetNode := prevs[<span class="number">0</span>].next[<span class="number">0</span>]</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> targetNode == <span class="literal">nil</span> || targetNode.key != key &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> targetNode, prevs</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查找指定节点的前置节点集合</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(slo *skipListOrder[K, V])</span></span> findPrePoint(key K) []*node[K, V] &#123;</span><br><span class="line">	<span class="comment">//prevs := make([]*node[K, V], slo.level)</span></span><br><span class="line">	prevs := slo.prevsCache[<span class="number">0</span>:slo.level]</span><br><span class="line">	prev := &amp;slo.head</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := slo.level - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i-- &#123;</span><br><span class="line">		<span class="keyword">for</span> next := prev.next[i]; next != <span class="literal">nil</span>; next = next.next[i] &#123;</span><br><span class="line">			<span class="keyword">if</span> next.key &gt;= key &#123;</span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">			prev = next</span><br><span class="line">		&#125;</span><br><span class="line">		prevs[i] = prev</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> prevs</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同样，大部分的实现原理和insert的是相同的，我们只要注意对空的最高层级逐层向下清理一下就可以了；</p>
+<h3 id="性能测试"><a href="#性能测试" class="headerlink" title="性能测试"></a>性能测试</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> test -bench . -benchmem </span><br></pre></td></tr></table></figure>
+
+<p>是否使用prevsCache对比：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">// 不使用</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       723417              1869 ns/op            2464 B/op         20 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.624s</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       706737              1836 ns/op            2463 B/op         20 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.359s</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       747856              1875 ns/op            2466 B/op         20 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.287s</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">// 使用</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       943723              1309 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      3.299s</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       942847              1305 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.874s</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       940773              1321 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.838s</span><br></pre></td></tr></table></figure>
+<p>可以看出性能提升很明显；</p>
+<p>randomLevel()方法方案一、方案二对比：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">// 方案一</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       943723              1309 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      3.299s</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       942847              1305 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.874s</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       940773              1321 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.838s</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">// 方案二</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       970602              1264 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      3.166s</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       960932              1299 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.827s</span><br><span class="line"></span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: my_go_stl/skiplist</span><br><span class="line">BenchmarkSkipList_Insert-10       967849              1276 ns/op             586 B/op         10 allocs/op</span><br><span class="line">PASS</span><br><span class="line">ok      my_go_stl/skiplist      2.801s</span><br></pre></td></tr></table></figure>
+<p>可以看出性能也得到了提升；</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/golang/" rel="tag"># golang</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/16/kafka/" rel="prev" title="Kafka">
+      <i class="fa fa-chevron-left"></i> Kafka
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#golang%E5%AE%9E%E7%8E%B0%E8%B7%B3%E8%A1%A8"><span class="nav-number">1.</span> <span class="nav-text">golang实现跳表</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%B3%E8%A1%A8%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.1.</span> <span class="nav-text">跳表介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%B3%E8%A1%A8%E7%9A%84golang%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.</span> <span class="nav-text">跳表的golang实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.2.1.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E8%B7%B3%E8%A1%A8"><span class="nav-number">1.2.2.</span> <span class="nav-text">初始化跳表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%8F%E6%9C%BAlevel"><span class="nav-number">1.2.3.</span> <span class="nav-text">随机level</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E6%89%BE"><span class="nav-number">1.2.4.</span> <span class="nav-text">查找</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E5%85%A5"><span class="nav-number">1.2.5.</span> <span class="nav-text">插入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4"><span class="nav-number">1.2.6.</span> <span class="nav-text">删除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95"><span class="nav-number">1.2.7.</span> <span class="nav-text">性能测试</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">bank</p>
+  <div class="site-description" itemprop="description">行至水穷处,坐看云起时</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">bank</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
