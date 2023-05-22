@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="微服务接口设计">
+<meta property="og:url" content="http://example.com/2023/05/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="bank blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-05-22T12:29:09.341Z">
+<meta property="article:modified_time" content="2023-05-22T12:31:39.160Z">
+<meta property="article:author" content="bank">
+<meta property="article:tag" content="基础规范">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2023/05/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>微服务接口设计 | bank blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">bank blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/05/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="bank">
+      <meta itemprop="description" content="行至水穷处,坐看云起时">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="bank blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          微服务接口设计
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-05-22 20:29:09 / 修改时间：20:31:39" itemprop="dateCreated datePublished" datetime="2023-05-22T20:29:09+08:00">2023-05-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80%E8%A7%84%E8%8C%83/" itemprop="url" rel="index"><span itemprop="name">基础规范</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <meta name="referrer" content="no-referrer"/>
+
+<span id="more"></span>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="exporter-version" content="Evernote Mac 9.5.27 (467686)" />
+    <meta name="author" content="R。" />
+    <meta name="created" content="2022-09-28 12:40:37 +0000" />
+    <meta name="source" content="yinxiang.superNote" />
+    <meta name="updated" content="2023-05-22 12:28:19 +0000" />
+    <meta name="content-class" content="yinxiang.superNote" />
+    <title>微服务接口设计</title>
+</head>
+
+<body>
+    <h1>高可用：</h1>
+    <ol>
+        <li>
+            <div>降级兜底：若依赖的服务挂掉，我们的业务不应该也跟着挂掉，需要制定好兜底的方案；</div>
+        </li>
+        <li>
+            <div>过载保护（保护自己）：请求等待超时、服务过载及早拒绝</div>
+        </li>
+        <li>
+            <div>流量控制（保护下游）：控制打到下游的流量如漏桶算法、令牌桶算法，必要时需要实现分布式限流；</div>
+        </li>
+        <li>
+            <div>快速失败：设置超时时间；</div>
+        </li>
+        <li>
+            <div>
+                无状态服务：尽可能使微服务无状态，状态即数据，若某一调用方的请求一定要落到某一后台节点，使用服务在杯底缓存的数据（状态），那么这个服务就是有状态的服务，应该把这些数据迁移到分布式缓存中，这样微服务就能在运行时动态增删节点，不需要考虑缓存数据的同步问题；
+            </div>
+        </li>
+        <li>
+            <div>最少依赖：尽可能减少对第三方的依赖；</div>
+        </li>
+        <li>
+            <div>简单可靠：可靠性只有靠不断追求最大程度的简化而得到；</div>
+        </li>
+        <li>
+            <div>分散原则：可以基于主次进行服务拆分，将重要接口放到一个服务中，次要接口放到另外一个服务中；</div>
+        </li>
+        <li>
+            <div>隔离原则：不同模块间相互隔离，如部署隔离、DB隔离；</div>
+        </li>
+        <li>
+            <div>幂等设计：对接口的多次调用所产生的结果和调用一次是一致的；</div>
+        </li>
+        <li>
+            <div>故障自愈：故障不可避免，系统要有自愈能力，如消息处理或异步逻辑等非关键操作失败引发的数据不一致，需要有最终一致性的操作，如兜底的定时任务、失败重试队列、用户在下次请求时触发修复逻辑；</div>
+        </li>
+        <li>
+            <div>CAP定理：一致性（consistency）、可用性（availability）、分区容错性（partition
+                tolerance），三者不能兼顾，必须在一致性（C）和可用性（A）做出取舍，若服务偏业务逻辑，对接用户，应选择AP，遵循BASE理论，若服务偏控制，对接服务，应选择CP，遵循ACID理论；</div>
+        </li>
+        <li>
+            <div>BASE理论：</div>
+        </li>
+    </ol>
+    <ul>
+        <ul>
+            <li>
+                <div><span style="font-family: unset;">基本可用（Basically Available）：服务降级兜底；</span></div>
+            </li>
+            <li>
+                <div><span style="font-family: unset;">软状态（Soft state）：允许系统在多个不同节点的数据副本存在数据延时；</span></div>
+            </li>
+            <li>
+                <div>最终一致性（Eventual consistency）：软状态应有时间期限，期限过后应当保证所有副本保持数据一致性；</div>
+            </li>
+        </ul>
+    </ul>
+    <div><br /></div>
+    <h1>高性能：</h1>
+    <h2>锁</h2>
+    <ul>
+        <ul>
+            <li>
+                <div>串行无锁</div>
+            </li>
+        </ul>
+    </ul>
+    <div>                       </div><img
+        src="%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1.resources/8E42902B-4767-4BB5-9E77-C243921C2909.png"
+        height="520" width="966" />
+    <div>-&gt;</div><img
+        src="%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1.resources/62A927EA-9B32-4DE1-A758-52002E90CF6C.png"
+        height="502" width="1192" />
+    <ul>
+        <li>
+            <div>使用原子操作实现无锁数据结构；</div>
+        </li>
+        <li>
+            <div>减少锁竞争，使用分片的形式，减少对资源加锁的次数</div>
+        </li>
+    </ul>
+    <div
+        style="--en-codeblock:true;--en-codeblockLanguage:javascript;box-sizing: border-box; padding: 8px; font-family: Monaco, Menlo, Consolas, &quot;Courier New&quot;, monospace; font-size: 12px; color: rgb(51, 51, 51); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px; background-color: rgb(251, 250, 248); border: 1px solid rgba(0, 0, 0, 0.14902); background-position: initial initial; background-repeat: initial initial; margin-top: 6px;">
+        var (
+           num = 1000000
+           m0  = make(map[int]struct{}, num)
+           mu0 = sync.RWMutex{}
+           m1  = make(map[int]struct{}, num)
+           mu1 = sync.RWMutex{}
+        )
+
+
+<pre><code>    // ConWriteMapNoShard 不分片写入一个 map。
+    func ConWriteMapNoShard() &#123;
+       g := errgroup.Group&#123;&#125;
+       for i := 0; i &amp;lt; num; i++ &#123;
+          g.Go(func() error &#123;
+             mu0.Lock()
+             defer mu0.Unlock()
+             m0[i] = struct&#123;&#125;&#123;&#125;
+             return nil
+          &#125;)
+       &#125;
+       _ = g.Wait()
+    &#125;
+
+
+    // ConWriteMapTwoShard 分片写入两个 map。
+    func ConWriteMapTwoShard() &#123;
+       g := errgroup.Group&#123;&#125;
+       for i := 0; i &amp;lt; num; i++ &#123;
+          g.Go(func() error &#123;
+             if i&amp;amp;1 == 0 &#123;
+                mu0.Lock()
+                defer mu0.Unlock()
+                m0[i] = struct&#123;&#125;&#123;&#125;
+                return nil
+             &#125;
+             mu1.Lock()
+             defer mu1.Unlock()
+             m1[i] = struct&#123;&#125;&#123;&#125;
+             return nil
+          &#125;)
+       &#125;
+       _ = g.Wait()
+    &#125;&lt;/div&gt;
+&lt;h2&gt;缓存（分类：进程级缓存、集中式缓存、分布式缓存、多级缓存）&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;旁路缓存（Cache-Aside）：首先从缓存中读取数据，若未命中则回源SoR读取并更新缓存；&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;div&gt;                       &lt;/div&gt;&lt;img
+    src=&quot;%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1.resources/289B6283-D988-4570-A200-A52FAA4463BD.png&quot;
+    height=&quot;191&quot; width=&quot;261&quot; /&gt;
+&lt;div&gt;&lt;span style=&quot;font-family: unset;&quot;&gt;                       可能出现两者数据不一致的情况：&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-family: unset;&quot;&gt;                        （1）并发写时，可能出现数据不一致；&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-family: unset;&quot;&gt;                        （2）先写数据源成功，但是接着写缓存失败，两者数据不一致；&lt;/span&gt;&lt;/div&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;缓存即数据源（Cache-as-SoR）：缓存当做代理使用，读写操作针对cache，然后cache再将读写操作委托给SoR，实现方式有三种：&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;div&gt;                        （1）穿透读模式，先查询cache，若不命中再由cahce回溯到SoR，即存储端实现Cache-Aside；&lt;/div&gt;
+&lt;div&gt;                        （2）穿透写模式，业务先调用写操作，由cache负责写缓存好SoR；&lt;/div&gt;
+&lt;div&gt;&lt;span style=&quot;font-family: unset;&quot;&gt;                        （3）回写模式，写操作时只更新缓存并立即返回，然后异步写SoR；&lt;/span&gt;&lt;/div&gt;
+&lt;ul&gt;
+    &lt;li&gt;
+        &lt;div&gt;缓存淘汰策略：（1）基于时间；（2）基于空间；（3）基于容量；（4）基于引用；&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;淘汰算法：FIFO、LRU、LFU&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;缓存穿透的解决方法：（1）设置空值或默认值；（2）布隆过滤器；（3）多个并发请求对一个失效的key进行请求时，只让其中一个执行，其余阻塞；&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;
+            缓存雪崩的解决方法：（1）缓存的失效时间集中在某段时间的情况，可以在缓存的过期时间中加入随机因子；（2）采用取模机制的某缓存实例宕机，移除故障机后导致大量的缓存不命中时，可以（a）采取主从备份，主节点故障时直接将从实例替换主（b）使用一致性哈希替代取模；
+        &lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;可以将热点数据缓存在多个机器上；&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;关于缓存的好实践：&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;动静分离；&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;慎用大对象&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;过期设置&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;超时设置&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;缓存隔离&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;失败降级&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;容量控制&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;业务导向&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;监控告警&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;h2&gt;异步&lt;/h2&gt;
+&lt;h2&gt;&lt;span style=&quot;font-family: unset;&quot;&gt;池化：&lt;/span&gt;&lt;/h2&gt;
+&lt;div&gt;&lt;span style=&quot;font-family: unset;&quot;&gt;（内存池、连接池、线程池、对象池）&lt;/span&gt;&lt;/div&gt;
+&lt;h2&gt;批量：&lt;/h2&gt;
+&lt;div&gt;能批量就不要并发，同时对于批量接口，也要注意接口的吞吐能力，避免长时间执行；&lt;/div&gt;
+&lt;h2&gt;并发：&lt;/h2&gt;
+&lt;div&gt;请求并发、冗余请求&lt;/div&gt;
+&lt;h2&gt;存储设计：&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;读写分离：&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;ul&gt;
+            &lt;li&gt;
+                &lt;div&gt;特点：（1）数据库服务是主从架构（2）主节点负责写操作，从节点负责读操作（3）主节点将数据复制到从节点&lt;/div&gt;
+            &lt;/li&gt;
+            &lt;li&gt;
+                &lt;div&gt;避免复制滞后带来的问题的方法：&lt;/div&gt;
+            &lt;/li&gt;
+            &lt;ul&gt;
+                &lt;li&gt;
+                    &lt;div&gt;写后读一致：即读自己的写，适用于用户写操作后要求实时看到更新；&lt;/div&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;div&gt;二次读取：优先读取从节点，若读取失败或跟踪的更新时间小于某个阈值，则再从主节点读取；&lt;/div&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;div&gt;区分场景：关键业务读取主节点，非关键业务读写分离；&lt;/div&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;div&gt;单调读：保证用户的读请求都发到同一个从节点，避免出现回滚的现象；&lt;/div&gt;
+                &lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;分库分表：&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;ul&gt;
+            &lt;li&gt;
+                &lt;div&gt;需要分库分表的情况：（1）单表的数据量达到了一定的量级（mysql一般是千万级）；（2）数据库吞吐量达到瓶颈&lt;/div&gt;
+            &lt;/li&gt;
+            &lt;li&gt;
+                &lt;div&gt;切分模式：&lt;/div&gt;
+            &lt;/li&gt;
+            &lt;ul&gt;
+                &lt;li&gt;
+                    &lt;div&gt;垂直切分：&lt;/div&gt;
+                &lt;/li&gt;
+                &lt;li&gt;
+                    &lt;div&gt;水平切分：&lt;/div&gt;
+                &lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;动静分离： 将经常更新的·数据和更新频率低的数据进行分离，有点像垂直切分，将动态和静态的字段分别存储在不同的库表中，减小数据库锁的粒度；&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;冷热分离：&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;重写轻读：冗余写，减轻读的压力，如写扩散；&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;数据异构：存储不同结构的数据，如数据格式的异构、数据存储地点的异构、数据存储逻辑的异构（如按照不同的索引维度来存储同一份数据）&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;h2&gt;零拷贝：&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;数据拷贝流程：&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;div&gt;                       &lt;/div&gt;&lt;img
+    src=&quot;%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1.resources/5BB1A213-0899-4A65-B6CF-B73C9A48CADB.png&quot;
+    height=&quot;182&quot; width=&quot;457&quot; /&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;内存映射：&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;div&gt;                       &lt;/div&gt;&lt;img
+    src=&quot;%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1.resources/71EA73E2-2B75-4E65-AE7C-50ACBB147402.png&quot;
+    height=&quot;182&quot; width=&quot;457&quot; /&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;零拷贝：&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;div&gt;                        &lt;/div&gt;&lt;img
+    src=&quot;%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1.resources/768B60BA-64AB-43E5-973F-AB705C2C0652.png&quot;
+    height=&quot;182&quot; width=&quot;458&quot; /&gt;
+&lt;div&gt;                        （1）DMA将数据拷贝到DMA引擎的内核缓冲区中；&lt;/div&gt;
+&lt;div&gt;                        （2）将数据的位置和长度的信息的描述符加到套接字缓冲区；&lt;/div&gt;
+&lt;div&gt;                        （3）DMA引擎直接将数据从内核缓冲区传递到协议引擎；&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;h2&gt;易维护：&lt;/h2&gt;
+&lt;ol&gt;
+    &lt;li&gt;
+        &lt;div&gt;充分必要：不是随便一个功能就要有个接口；&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;单一职责：每个API只专注做一件事；&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;内聚接偶：一个接口要包含完整的业务功能，不同接口之间的关联要尽可能的小（一般使用MQ完成接口间的耦合）；&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;开闭原则：对扩展开放，对修改关闭；&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;统一原则：接口要具备统一的命名规范、统一的出入参风格、统一的异常处理流程、统一的错误码定义、统一的版本规范等；&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;用户重试：接口失败时，应该尽可能的由用户重试，而不是由后台进行处理；&lt;/span&gt;&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;最小惊讶：代码应该尽可能避免读者蒙圈；&lt;/span&gt;&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;避免无效请求：不要传递无效请求至下游；&lt;/span&gt;&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;入参校验：做好入参校验，及早发现无效请求并拒绝；&lt;/span&gt;&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;设计模式：适当使用设计模式；&lt;/span&gt;&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;禁用flag标志：&lt;/span&gt;&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;div&gt;&lt;span
+                style=&quot;font-size: 13px;&quot;&gt;页宜小不宜大：结果集包含成千上百条数据时，返回查询就需要分页，通常通过一个offset偏移量或者页码进行分页，然后通过API一页一页的查询；&lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/li&gt;
+&lt;/ol&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;h1&gt;低风险：&lt;/h1&gt;
+&lt;h2&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;防止sql注入：&lt;/span&gt;&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;严格检查输入变量的类型和格式；&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;过滤和转义特殊字符；&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;使用参数化查询，而非手动拼接SQL；&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;防刷：&lt;/span&gt;&lt;/h2&gt;
+&lt;div&gt;基于用户ID、基于IP、基于设备ID防刷&lt;/div&gt;
+&lt;h2&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;防篡改：（使用了https也不能保证绝对安全）&lt;/span&gt;&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;客户端使用约定好的密钥对传输的参数进行加密，得到签名值s1，一般用HMAC；&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;客户端将签名放入请求，发送给服务器；&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;服务器收到请求，使用约定好的密钥对请求的参数再次进行加密，得到签名值s2；&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;服务器比对s1和s2，若不一致则说明参数被篡改；&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;h2&gt;防重放：&lt;/h2&gt;
+&lt;ul&gt;
+    &lt;ul&gt;
+        &lt;li&gt;
+            &lt;div&gt;重放：恶意用户抓取真实的接口请求包，不提供的发送重复请求；（对写接口影响较大）&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;
+            &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;解决方法：&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;ul&gt;
+            &lt;li&gt;
+                &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;客户端基于“请求内容+时间戳+密钥”计算一个签名s1，一般使用HMAC；&lt;/span&gt;
+                &lt;/div&gt;
+            &lt;/li&gt;
+            &lt;li&gt;
+                &lt;div&gt;&lt;span style=&quot;font-size: 13.000000953674316px;&quot;&gt;客户端请求后台接口时带上s1；&lt;/span&gt;&lt;/div&gt;
+            &lt;/li&gt;
+            &lt;li&gt;
+                &lt;div&gt;&lt;span
+                        style=&quot;font-size: 13.000000953674316px;&quot;&gt;后台拿到签名后，使用心啊沟通的算法计算出一个签名与s1比较，若不一致则非法，直接拒绝；&lt;/span&gt;
+                &lt;/div&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+&lt;div&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;                                        因为黑客不知道签名密钥，没法生成新的签名；&lt;/span&gt;&lt;/div&gt;
+&lt;h2&gt;防DDoS：&lt;/h2&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;h1&gt;end&lt;/h1&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;                            &lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+&lt;div&gt;&lt;br /&gt;&lt;/div&gt;
+</code></pre>
+</body>
+
+</html>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%9F%BA%E7%A1%80%E8%A7%84%E8%8C%83/" rel="tag"># 基础规范</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/19/golang%E5%AE%9E%E7%8E%B0%E8%B7%B3%E8%A1%A8/" rel="prev" title="golang实现跳表">
+      <i class="fa fa-chevron-left"></i> golang实现跳表
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">高可用：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">高性能：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">2.1.</span> <span class="nav-text">锁</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">bank</p>
+  <div class="site-description" itemprop="description">行至水穷处,坐看云起时</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">bank</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
