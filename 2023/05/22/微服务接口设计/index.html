@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1.resources/71EA73E2-2B75-4E65-AE7C-50ACBB147402.png">
 <meta property="og:image" content="http://example.com/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1.resources/768B60BA-64AB-43E5-973F-AB705C2C0652.png">
 <meta property="article:published_time" content="2023-05-22T12:29:09.341Z">
-<meta property="article:modified_time" content="2023-05-22T12:37:25.765Z">
+<meta property="article:modified_time" content="2023-05-22T13:03:35.157Z">
 <meta property="article:author" content="bank">
 <meta property="article:tag" content="基础规范">
 <meta name="twitter:card" content="summary">
@@ -190,7 +190,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2023-05-22 20:29:09 / 修改时间：20:37:25" itemprop="dateCreated datePublished" datetime="2023-05-22T20:29:09+08:00">2023-05-22</time>
+              <time title="创建时间：2023-05-22 20:29:09 / 修改时间：21:03:35" itemprop="dateCreated datePublished" datetime="2023-05-22T20:29:09+08:00">2023-05-22</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -291,7 +291,7 @@
 <li><p>可以将热点数据缓存在多个机器上；</p>
 </li>
 <li><p>关于缓存的好实践：</p>
-</li>
+<ul>
 <li><p>动静分离；</p>
 </li>
 <li><p>慎用大对象</p>
@@ -311,12 +311,14 @@
 <li><p>监控告警</p>
 </li>
 </ul>
+</li>
+</ul>
 <h3 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h3><h3 id="池化："><a href="#池化：" class="headerlink" title="池化："></a>池化：</h3><p>（内存池、连接池、线程池、对象池）</p>
 <h3 id="批量："><a href="#批量：" class="headerlink" title="批量："></a>批量：</h3><p>能批量就不要并发，同时对于批量接口，也要注意接口的吞吐能力，避免长时间执行；</p>
 <h3 id="并发："><a href="#并发：" class="headerlink" title="并发："></a>并发：</h3><p>请求并发、冗余请求</p>
 <h3 id="存储设计："><a href="#存储设计：" class="headerlink" title="存储设计："></a>存储设计：</h3><ul>
 <li><p>读写分离：</p>
-</li>
+<ul>
 <li><p>特点：（1）数据库服务是主从架构（2）主节点负责写操作，从节点负责读操作（3）主节点将数据复制到从节点</p>
 </li>
 <li><p>避免复制滞后带来的问题的方法：</p>
@@ -329,15 +331,21 @@
 </li>
 <li><p>单调读：保证用户的读请求都发到同一个从节点，避免出现回滚的现象；</p>
 </li>
-<li><p>分库分表：</p>
+</ul>
 </li>
+<li><p>分库分表：</p>
+<ul>
 <li><p>需要分库分表的情况：（1）单表的数据量达到了一定的量级（mysql一般是千万级）；（2）数据库吞吐量达到瓶颈</p>
 </li>
 <li><p>切分模式：</p>
-</li>
+<ul>
 <li><p>垂直切分：</p>
 </li>
 <li><p>水平切分：</p>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li><p>动静分离： 将经常更新的·数据和更新频率低的数据进行分离，有点像垂直切分，将动态和静态的字段分别存储在不同的库表中，减小数据库锁的粒度；</p>
 </li>
@@ -412,15 +420,16 @@
 <li><p>重放：恶意用户抓取真实的接口请求包，不提供的发送重复请求；（对写接口影响较大）</p>
 </li>
 <li><p>解决方法：</p>
-</li>
+<ul>
 <li><p>客户端基于“请求内容+时间戳+密钥”计算一个签名s1，一般使用HMAC；</p>
 </li>
 <li><p>客户端请求后台接口时带上s1；</p>
 </li>
-<li><p>后台拿到签名后，使用心啊沟通的算法计算出一个签名与s1比较，若不一致则非法，直接拒绝；</p>
+<li><p>后台拿到签名后，使用心啊沟通的算法计算出一个签名与s1比较，若不一致则非法，直接拒绝；因为黑客不知道签名密钥，没法生成新的签名；</p>
 </li>
 </ul>
-<p>                                        因为黑客不知道签名密钥，没法生成新的签名；</p>
+</li>
+</ul>
 <h3 id="防DDoS："><a href="#防DDoS：" class="headerlink" title="防DDoS："></a>防DDoS：</h3><h2 id="end"><a href="#end" class="headerlink" title="end"></a>end</h2>
     </div>
 
