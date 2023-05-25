@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="重构-改善既有代码的设计">
+<meta property="og:url" content="http://example.com/2023/05/25/%E9%87%8D%E6%9E%84-%E6%94%B9%E5%96%84%E6%97%A2%E6%9C%89%E4%BB%A3%E7%A0%81%E7%9A%84%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="bank blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-05-25T05:41:08.447Z">
+<meta property="article:modified_time" content="2023-05-25T06:08:27.692Z">
+<meta property="article:author" content="bank">
+<meta property="article:tag" content="工程素养">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2023/05/25/%E9%87%8D%E6%9E%84-%E6%94%B9%E5%96%84%E6%97%A2%E6%9C%89%E4%BB%A3%E7%A0%81%E7%9A%84%E8%AE%BE%E8%AE%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>重构-改善既有代码的设计 | bank blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">bank blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/05/25/%E9%87%8D%E6%9E%84-%E6%94%B9%E5%96%84%E6%97%A2%E6%9C%89%E4%BB%A3%E7%A0%81%E7%9A%84%E8%AE%BE%E8%AE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="bank">
+      <meta itemprop="description" content="行至水穷处,坐看云起时">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="bank blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          重构-改善既有代码的设计
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-05-25 13:41:08 / 修改时间：14:08:27" itemprop="dateCreated datePublished" datetime="2023-05-25T13:41:08+08:00">2023-05-25</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B7%A5%E7%A8%8B%E7%B4%A0%E5%85%BB/" itemprop="url" rel="index"><span itemprop="name">工程素养</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <meta name="referrer" content="no-referrer"/>
+
+<span id="more"></span>
+
+<p>重构：使用一系列重构手法，在不改变可观察行为的前提下，调整其结构。</p>
+<p>何时重构：事不过三，三则重构；</p>
+<h1 id="需要重构的场景：（23种坏味道）"><a href="#需要重构的场景：（23种坏味道）" class="headerlink" title="需要重构的场景：（23种坏味道）"></a><strong>需要重构的场景：（23种坏味道）</strong></h1><ol>
+<li>神秘命名；</li>
+<li>重复代码；</li>
+<li>过长函数；（当感觉要写注释时来说明什么的时候，就可以把需要说明的东西写进一个函数，并以其用途命名）</li>
+<li>过长参数列表；</li>
+<li>全局变量；（随处可修改，及其不可控，应将其封装，并限制作用域）；</li>
+<li>可变数据；（封装数据）</li>
+<li>发散式变化：（某个模块经常因为不同的原因在不同的方向上发生变化）应该要高内聚，低耦合；</li>
+<li>霰弹式修改：每遇到某种变化时，都必须在许多不同的类中作出许多小修改，应使用搬移函数和搬移字段把所有需要修改的代码放进同一个模块里；</li>
+<li>依恋情结：一个函数跟另一个模块中的函数或者数据交流格外频繁，远胜于在自己所处模块内部的交流，应使用搬移函数将函数和数据放在一起；</li>
+<li>数据泥团：在多个地方出现相同的三四项数据，应考虑将者三四项数据封装成类；</li>
+<li>基本类型偏执；</li>
+<li>重复的switch；</li>
+<li>循环语句：使用管道操作替代（如filter和map）；</li>
+<li>冗余的元素：某些函数或类只是简简单单的包装了一层，名称和实现看起来一模一样，并只使用了一次，这时可以删除；</li>
+<li>夸夸其谈通用性；</li>
+<li>临时字段：类内部的某个字段仅为特定情况而设；</li>
+<li>过长的消息链；</li>
+<li>中间人：某个类的接口有一半的函数都委托给其他类，应移除中间人；</li>
+<li>内幕交易：两个模块间频繁交换数据，应将公共子类提取出来；</li>
+<li>过大的类；</li>
+<li>异曲同工的类；</li>
+<li>纯数据类：应把处理数据的行为从客户端移到纯数据类中；</li>
+<li>被拒绝的馈赠；</li>
+</ol>
+<h1 id="重构的方法："><a href="#重构的方法：" class="headerlink" title="重构的方法："></a><strong>重构的方法：</strong></h1><ul>
+<li>提炼函数：若需要花时间浏览一段代码才能弄清它到底在干什么，那么就应该将其提炼到一个函数中；</li>
+<li>内联函数：某些函数的内部代码和函数名称同样清晰易懂可以进行内联，或者有一群组织不合理的函数，可以将它们内联到一个大型函数中，在重新提炼小函数；做法如下：<ul>
+<li>检查函数，确定它不具有多态性；</li>
+<li>找出这个函数的所有调用点；</li>
+<li>将这个函数的所有调用点都替换成函数本体；</li>
+<li>每次替换之后，执行测试；</li>
+<li>删除该函数的定义；</li>
+</ul>
+</li>
+<li>提炼变量：表达式有可能非常复杂而难以阅读，局部变量可以帮助我们将表达式分解成比较容易管理的形式；</li>
+<li>内联变量：有时变量名字不比表达式本身更具表现力；</li>
+<li>改变函数声明：函数命名、参数列表</li>
+<li>封装变量：对于所有可变数据，只要它的作用域超出单个函数，就可以将其封装起来，只允许通过函数访问；</li>
+<li>变量改名：</li>
+<li>引入参数对象：使用数据结构代替数据泥团，提炼数据结构之后可以将函数封装成类中的方法；</li>
+<li>函数组合成类：当一组函数形影不离的操作同一块数据（通常是将这块数据作为参数传递给函数），此时可以组建一个类；</li>
+<li>函数组合成变换：有时需要把数据“喂”给一个程序，让他计算出各种派生信息，这些派生信息可能会在几个不同的地方用到，因此这些计算逻辑也常会在用到派生数据的地方重复；</li>
+</ul>
+<p>重构方法如下：</p>
+<ol>
+<li>采用数据变换函数：输入是源数据，计算出所有派生数据，将派生数据以字段的形式填入输出数据；</li>
+<li>将函数组合成类：先用源数据创建一个类，再把相关的计算逻辑搬移到类中；（若需要对源数据进行更新，使用这种方法较好）</li>
+</ol>
+<ul>
+<li>拆分阶段：当一段代码在处理两件不同的事，可以把它拆分成独立的模块；<ul>
+<li>将两个阶段的代码提炼成更独立的函数-&gt;引入中转数据结构，将其作为参数添加到提炼出的新函数的参数列表-&gt;测试</li>
+</ul>
+</li>
+</ul>
+<h1 id="封装："><a href="#封装：" class="headerlink" title="封装："></a><strong>封装：</strong></h1><h2 id="封装记录："><a href="#封装记录：" class="headerlink" title="封装记录："></a><strong>封装记录：</strong></h2><p>使用类代替记录型结构（如map），不必把所有大型的数据结构都封装成类（每个字段对应一条属性），合理混用取值函数和对象更明智；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">organization = &#123;<span class="attr">name</span>: <span class="string">&quot;Acme Gooseberries&quot;</span>, <span class="attr">country</span>: <span class="string">&quot;GB&quot;</span>&#125;;</span><br><span class="line">⬇️</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Organization</span> &#123;</span><br><span class="line">　<span class="title function_">constructor</span>(<span class="params">data</span>) &#123;</span><br><span class="line">　　<span class="variable language_">this</span>.<span class="property">_name</span> = data.<span class="property">name</span>; </span><br><span class="line">　　<span class="variable language_">this</span>.<span class="property">_country</span> = data.<span class="property">country</span>;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">name</span>()    &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_name</span>;&#125; </span><br><span class="line">　<span class="keyword">set</span> <span class="title function_">name</span>(<span class="params">arg</span>) &#123;<span class="variable language_">this</span>.<span class="property">_name</span> = arg;&#125;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">country</span>()    &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_country</span>;&#125; </span><br><span class="line">　<span class="keyword">set</span> <span class="title function_">country</span>(<span class="params">arg</span>) &#123;<span class="variable language_">this</span>.<span class="property">_country</span> = arg;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="封装集合："><a href="#封装集合：" class="headerlink" title="封装集合："></a><strong>封装集合：</strong></h2><p>封装集合时若只对集合变量进行了封装，依然让取值函数返回集合本身，使得集合的成员可以直接被修改；</p>
+<p>做法：</p>
+<ol>
+<li>若集合的引用尚未封装，先用封装变量封装他；</li>
+<li>在类上添加用于“添加集合元素”和“移除集合元素”的函数；</li>
+<li>修改集合的取值函数，使其返回一份只读的数据，可以使用只读代理或数据副本；</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="keyword">get</span> <span class="title function_">courses</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_courses</span>;&#125;</span><br><span class="line">  <span class="keyword">set</span> <span class="title function_">courses</span>(<span class="params">aList</span>) &#123;<span class="variable language_">this</span>.<span class="property">_courses</span> = aList;&#125;</span><br><span class="line">⬇️</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="keyword">get</span> <span class="title function_">courses</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_courses</span>.<span class="title function_">slice</span>();&#125;</span><br><span class="line">  <span class="title function_">addCourse</span>(<span class="params">aCourse</span>) &#123; ... &#125;</span><br><span class="line">  <span class="title function_">removeCourse</span>(<span class="params">aCourse</span>) &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="以对象取代基本类型："><a href="#以对象取代基本类型：" class="headerlink" title="以对象取代基本类型："></a><strong>以对象取代基本类型：</strong></h2><p>当某个数据不仅仅局限于打印时，可以为其创建一个新类，后续添加的业务逻辑就可以直接添加到类里面去了；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">orders.<span class="title function_">filter</span>(<span class="function"><span class="params">o</span> =&gt;</span> <span class="string">&quot;high&quot;</span> === o.<span class="property">priority</span></span><br><span class="line">               || <span class="string">&quot;rush&quot;</span> === o.<span class="property">priority</span>);</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line">orders.<span class="title function_">filter</span>(<span class="function"><span class="params">o</span> =&gt;</span> o.<span class="property">priority</span>.<span class="title function_">higherThan</span>(<span class="keyword">new</span> <span class="title class_">Priority</span>(<span class="string">&quot;normal&quot;</span>)))</span><br></pre></td></tr></table></figure>
+<h2 id="以查询取代临时变量："><a href="#以查询取代临时变量：" class="headerlink" title="以查询取代临时变量："></a><strong>以查询取代临时变量：</strong></h2><p>对于只被计算一次且不再修改的变量适用，对于做快照用途的临时变量该方法不适用；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> basePrice = <span class="variable language_">this</span>.<span class="property">_quantity</span> * <span class="variable language_">this</span>.<span class="property">_itemPrice</span>; </span><br><span class="line"><span class="keyword">if</span> (basePrice &gt; <span class="number">1000</span>)</span><br><span class="line">  <span class="keyword">return</span> basePrice * <span class="number">0.95</span>; </span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  <span class="keyword">return</span> basePrice * <span class="number">0.98</span>;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">get</span> <span class="title function_">basePrice</span>() &#123;<span class="variable language_">this</span>.<span class="property">_quantity</span> * <span class="variable language_">this</span>.<span class="property">_itemPrice</span>;&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span> (<span class="variable language_">this</span>.<span class="property">basePrice</span> &gt; <span class="number">1000</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">basePrice</span> * <span class="number">0.95</span>;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  <span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">basePrice</span> * <span class="number">0.98</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="提炼类："><a href="#提炼类：" class="headerlink" title="提炼类："></a><strong>提炼类：</strong></h2><p>即分解类，当发现子类化只影响类的部分特性，或者某些特性需要以一种方式来子类化，某些特性则需要以另一种方式子类化，这是就需要分解原来的类了；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">officeAreaCode</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_officeAreaCode</span>;&#125; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">officeNumber</span>()   &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_officeNumber</span>;&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">officeAreaCode</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_telephoneNumber</span>.<span class="property">areaCode</span>;&#125; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">officeNumber</span>()   &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_telephoneNumber</span>.<span class="property">number</span>;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TelephoneNumber</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">areaCode</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_areaCode</span>;&#125; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">number</span>()   &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_number</span>;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="内联类："><a href="#内联类：" class="headerlink" title="内联类："></a><strong>内联类：</strong></h2><p>若一个类不再承担足够的责任，不再有单独存在的理由，就需要将其“萎缩”进其他的类中；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">officeAreaCode</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_telephoneNumber</span>.<span class="property">areaCode</span>;&#125; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">officeNumber</span>() 　&#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_telephoneNumber</span>.<span class="property">number</span>;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TelephoneNumber</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">areaCode</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_areaCode</span>;&#125; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">number</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_number</span>;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">officeAreaCode</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_officeAreaCode</span>;&#125; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">officeNumber</span>()　 &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_officeNumber</span>;&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="隐藏委托关系："><a href="#隐藏委托关系：" class="headerlink" title="隐藏委托关系："></a><strong>隐藏委托关系：</strong></h2><p>“如果某些客户端先通过服务对象的字段得到另一个对象（受托类），然后调用后者的函数，那么客户就必须知晓这一层委托关系。万一受托类修改了接口，变化会波及通过服务对象使用它的所有客户端。我可以在服务对象上放置一个简单的委托函数，将委托关系隐藏起来，从而去除这种依赖。这么一来，即使将来委托关系发生变化，变化也只会影响服务对象，而不会直接波及所有客户端。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">manager = aPerson.<span class="property">department</span>.<span class="property">manager</span>;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line">manager = aPerson.<span class="property">manager</span>; </span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="keyword">get</span> <span class="title function_">manager</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">department</span>.<span class="property">manager</span>;&#125;<span class="comment">//防止客户端知道department的工作原理（department负责追踪“经理”这条信息），建立一个简单的委托函数</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="移除中间人："><a href="#移除中间人：" class="headerlink" title="移除中间人："></a><strong>移除中间人：</strong></h2><p>为了隐藏委托关系的封装是有代价的，每当客户端要使用受托类的新特性的时候，就必须在服务端添加一个简单的委托函数，随着功能的增多，越来越多的转发函数会很复杂，此时需要移除中间人；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">manager = aPerson.<span class="property">manager</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">  <span class="keyword">get</span> <span class="title function_">manager</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">department</span>.<span class="property">manager</span>;&#125;<span class="comment">//防止客户端知道department的工作原理（department负责追踪“经理”这条信息），建立一个简单的委托函数</span></span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line">manager = aPerson.<span class="property">department</span>.<span class="property">manager</span>;</span><br></pre></td></tr></table></figure>
+<h2 id="替换算法："><a href="#替换算法：" class="headerlink" title="替换算法："></a><strong>替换算法：</strong></h2><p>有时会发现，与原先的做法相比，有更简单的解决方案，此时需要替换原先的算法；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">foundPerson</span>(<span class="params">people</span>) &#123;</span><br><span class="line">　<span class="keyword">for</span>(<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; people.<span class="property">length</span>; i++) &#123; </span><br><span class="line">　　<span class="keyword">if</span> (people[i] === <span class="string">&quot;Don&quot;</span>) &#123;</span><br><span class="line">　　　<span class="keyword">return</span> <span class="string">&quot;Don&quot;</span>;</span><br><span class="line">　　&#125;</span><br><span class="line">　　<span class="keyword">if</span> (people[i] === <span class="string">&quot;John&quot;</span>) &#123; </span><br><span class="line">　　　<span class="keyword">return</span> <span class="string">&quot;John&quot;</span>;</span><br><span class="line">　　&#125;</span><br><span class="line">　　<span class="keyword">if</span> (people[i] === <span class="string">&quot;Kent&quot;</span>) &#123; </span><br><span class="line">　　　<span class="keyword">return</span> <span class="string">&quot;Kent&quot;</span>;</span><br><span class="line">　　&#125;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="keyword">return</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">foundPerson</span>(<span class="params">people</span>) &#123;</span><br><span class="line">　<span class="keyword">const</span> candidates = [<span class="string">&quot;Don&quot;</span>, <span class="string">&quot;John&quot;</span>, <span class="string">&quot;Kent&quot;</span>];</span><br><span class="line">　<span class="keyword">return</span> people.<span class="title function_">find</span>(<span class="function"><span class="params">p</span> =&gt;</span> candidates.<span class="title function_">includes</span>(p)) || <span class="string">&#x27;&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="搬移特性："><a href="#搬移特性：" class="headerlink" title="搬移特性："></a><strong>搬移特性：</strong></h1><h2 id="搬移函数："><a href="#搬移函数：" class="headerlink" title="搬移函数："></a><strong>搬移函数：</strong></h2><p>函数频繁使用其他上下文的元素，而对自身上下文中的元素却关心甚少；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Account</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">overdraftCharge</span>() &#123;…&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">AccountType</span> &#123;</span><br><span class="line">    <span class="keyword">get</span> <span class="title function_">overdraftCharge</span>() &#123;...&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="搬移字段："><a href="#搬移字段：" class="headerlink" title="搬移字段："></a><strong>搬移字段：</strong></h2><p>若源字段得到了良好的封装，改造起来会比较容易；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Customer</span> &#123;</span><br><span class="line">  <span class="keyword">get</span> <span class="title function_">plan</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_plan</span>;&#125;</span><br><span class="line">  <span class="keyword">get</span> <span class="title function_">discountRate</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_discountRate</span>;&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Customer</span> &#123;</span><br><span class="line">  <span class="keyword">get</span> <span class="title function_">plan</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_plan</span>;&#125;</span><br><span class="line">  <span class="keyword">get</span> <span class="title function_">discountRate</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">plan</span>.<span class="property">discountRate</span>;&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="搬移语句到函数："><a href="#搬移语句到函数：" class="headerlink" title="搬移语句到函数："></a><strong>搬移语句到函数：</strong></h2><p>当调用某个函数时，总有一些相同的代码也需要每次执行，那么可以考虑将此段代码合并到函数里；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">result.<span class="title function_">push</span>(<span class="string">`&lt;p&gt;title: <span class="subst">$&#123;person.photo.title&#125;</span>&lt;/p&gt;`</span>); </span><br><span class="line">result.<span class="title function_">concat</span>(<span class="title function_">photoData</span>(person.<span class="property">photo</span>));</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">photoData</span>(<span class="params">aPhoto</span>) &#123; </span><br><span class="line">　<span class="keyword">return</span> [</span><br><span class="line">　　<span class="string">`&lt;p&gt;location: <span class="subst">$&#123;aPhoto.location&#125;</span>&lt;/p&gt;`</span>,</span><br><span class="line">　　<span class="string">`&lt;p&gt;date: <span class="subst">$&#123;aPhoto.date.toDateString()&#125;</span>&lt;/p&gt;`</span>,</span><br><span class="line"> ];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line">result.<span class="title function_">concat</span>(<span class="title function_">photoData</span>(person.<span class="property">photo</span>));</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">photoData</span>(<span class="params">aPhoto</span>) &#123; </span><br><span class="line">　<span class="keyword">return</span> [</span><br><span class="line">　　<span class="string">`&lt;p&gt;title: <span class="subst">$&#123;aPhoto.title&#125;</span>&lt;/p&gt;`</span>,</span><br><span class="line">　　<span class="string">`&lt;p&gt;location: <span class="subst">$&#123;aPhoto.location&#125;</span>&lt;/p&gt;`</span>,</span><br><span class="line">　　<span class="string">`&lt;p&gt;date: <span class="subst">$&#123;aPhoto.date.toDateString()&#125;</span>&lt;/p&gt;`</span>,</span><br><span class="line">　];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="搬移语句到调用者："><a href="#搬移语句到调用者：" class="headerlink" title="搬移语句到调用者："></a><strong>搬移语句到调用者：</strong></h2><p>以往在多个地方共用的行为，现在需要在某些调用点面前表现出不同的行为，此时需要将表现不同的行为从函数里搬移到其调用处；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">emitPhotoData</span>(outStream, person.<span class="property">photo</span>); </span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span>  <span class="title function_">emitPhotoData</span>(<span class="params">outStream, photo</span>) &#123;</span><br><span class="line">　outStream.<span class="title function_">write</span>(<span class="string">`&lt;p&gt;title: <span class="subst">$&#123;photo.title&#125;</span>&lt;/p&gt;\n`</span>); </span><br><span class="line">　outStream.<span class="title function_">write</span>(<span class="string">`&lt;p&gt;location: <span class="subst">$&#123;photo.location&#125;</span>&lt;/p&gt;\n`</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="title function_">emitPhotoData</span>(outStream, person.<span class="property">photo</span>); </span><br><span class="line">outStream.<span class="title function_">write</span>(<span class="string">`&lt;p&gt;location: <span class="subst">$&#123;person.photo.location&#125;</span>&lt;/p&gt;\n`</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">emitPhotoData</span>(<span class="params">outStream, photo</span>) &#123;</span><br><span class="line">　outStream.<span class="title function_">write</span>(<span class="string">`&lt;p&gt;title: <span class="subst">$&#123;photo.title&#125;</span>&lt;/p&gt;\n`</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="以函数调用取代内联代码："><a href="#以函数调用取代内联代码：" class="headerlink" title="以函数调用取代内联代码："></a><strong>以函数调用取代内联代码：</strong></h2><p>善用函数可以将相关的行为打包起来，可以减少重复代码，提高代码表达力；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> appliesToMass = <span class="literal">false</span>; </span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">const</span> s <span class="keyword">of</span> states) &#123;</span><br><span class="line">  <span class="keyword">if</span> (s === <span class="string">&quot;MA&quot;</span>) appliesToMass = <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line">appliesToMass = states.<span class="title function_">includes</span>(<span class="string">&quot;MA&quot;</span>);</span><br></pre></td></tr></table></figure>
+<h2 id="移动语句："><a href="#移动语句：" class="headerlink" title="移动语句："></a><strong>移动语句：</strong></h2><p>尽量让相关联的代码一起出现；移动代码时，若待移动代码片段中引用的变量在另一个代码片段中被修改了，那就不能将前者安全的移动到后者之后；</p>
+<h2 id="拆分循环："><a href="#拆分循环：" class="headerlink" title="拆分循环："></a><strong>拆分循环：</strong></h2><p>若一个循环一次做了多件事，可以将其拆分成多次循环，每次循环负责一件事（大多数情况下，多次循环不会成为性能的瓶颈）</p>
+<h2 id="以管道取代循环："><a href="#以管道取代循环：" class="headerlink" title="以管道取代循环："></a><strong>以管道取代循环：</strong></h2><p>（目前了解go语言没有书中所说形式的管道，暂未阅读）</p>
+<h2 id="移除死代码："><a href="#移除死代码：" class="headerlink" title="移除死代码："></a><strong>移除死代码：</strong></h2><p>删除掉不使用的代码，可以在删除的位置添加注释，提一下这段代码的存在，以及他被移除的那个提交的版本号；</p>
+<h1 id="重新组织数据："><a href="#重新组织数据：" class="headerlink" title="重新组织数据："></a><strong>重新组织数据：</strong></h1><h2 id="拆分变量："><a href="#拆分变量：" class="headerlink" title="拆分变量："></a><strong>拆分变量：</strong></h2><p>若变量承担多个责任，那他就应该被替换成多个变量，每个变量只承担一个责任；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> temp = <span class="number">2</span> * (height + width); </span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(temp);</span><br><span class="line">temp = height * width; </span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(temp);</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> perimeter = <span class="number">2</span> * (height + width); </span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(perimeter);</span><br><span class="line"><span class="keyword">const</span> area = height * width; </span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(area);</span><br></pre></td></tr></table></figure>
+<h2 id="字段改名："><a href="#字段改名：" class="headerlink" title="字段改名："></a><strong>字段改名：</strong></h2><h2 id="以查询取代派生变量："><a href="#以查询取代派生变量：" class="headerlink" title="以查询取代派生变量："></a><strong>以查询取代派生变量：</strong></h2><p>若计算使用的源数据会被修改，则对象风格（把一系列计算得出的属性包装在数据结构中）更好，若源数据不可变，或派生数据用过即弃，则对象风格和函数风格（将一个数据结构变换成另一个数据结构）都可以；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">get</span> <span class="title function_">discountedTotal</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_discountedTotal</span>;&#125; </span><br><span class="line"><span class="keyword">set</span> <span class="title function_">discount</span>(<span class="params">aNumber</span>) &#123;</span><br><span class="line">　<span class="keyword">const</span> old = <span class="variable language_">this</span>.<span class="property">_discount</span>; </span><br><span class="line">　<span class="variable language_">this</span>.<span class="property">_discount</span> = aNumber; </span><br><span class="line">　<span class="variable language_">this</span>.<span class="property">_discountedTotal</span> += old - aNumber;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">get</span> <span class="title function_">discountedTotal</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_baseTotal</span> - <span class="variable language_">this</span>.<span class="property">_discount</span>;&#125; </span><br><span class="line"><span class="keyword">set</span> <span class="title function_">discount</span>(<span class="params">aNumber</span>) &#123;<span class="variable language_">this</span>.<span class="property">_discount</span> = aNumber;&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="将引用对象改为值对象："><a href="#将引用对象改为值对象：" class="headerlink" title="将引用对象改为值对象："></a><strong>将引用对象改为值对象：</strong></h2><p>引用对象，在更新其属性时，会保留原对象不动，更新内部对象的属性；值对象，会替换整个内部对象，新对象有我们想要的属性值；</p>
+<p>做法：</p>
+<ol>
+<li>检查重构目标是否是不可变对象，或者是否可以修改成不可变对象；</li>
+<li>用移除设值函数注意去点所有设值函数；</li>
+<li>提供一个基于值的相等性判断函数，在其中使用值函数；（使用值判断相等性）</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Product</span> &#123;</span><br><span class="line">  <span class="title function_">applyDiscount</span>(<span class="params">arg</span>) &#123;<span class="variable language_">this</span>.<span class="property">_price</span>.<span class="property">amount</span> -= arg;&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Product</span> &#123; </span><br><span class="line">  <span class="title function_">applyDiscount</span>(<span class="params">arg</span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">_price</span> = <span class="keyword">new</span> <span class="title class_">Money</span>(<span class="variable language_">this</span>.<span class="property">_price</span>.<span class="property">amount</span> - arg, <span class="variable language_">this</span>.<span class="property">_price</span>.<span class="property">currency</span>);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="将值对象改为引用对象："><a href="#将值对象改为引用对象：" class="headerlink" title="将值对象改为引用对象："></a><strong>将值对象改为引用对象：</strong></h2><p>多个数据结构共享相同的数据，此时每个数据结构都维护一份数据不合理，可以使用引用对象；</p>
+<p>做法：</p>
+<ol>
+<li>为相关对象创建一个仓库；</li>
+<li>确保构造函数有办法找到关联对象的正确实例；</li>
+<li>修改宿主对象的构造函数，令其从仓库中获取关联对象；</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> customer = <span class="keyword">new</span> <span class="title class_">Customer</span>(customerData);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> customer = customerRepository.<span class="title function_">get</span>(customerData.<span class="property">id</span>);</span><br></pre></td></tr></table></figure>
+<h1 id="简化条件逻辑："><a href="#简化条件逻辑：" class="headerlink" title="简化条件逻辑："></a><strong>简化条件逻辑：</strong></h1><h2 id="分解条件表达式："><a href="#分解条件表达式：" class="headerlink" title="分解条件表达式："></a><strong>分解条件表达式：</strong></h2><p>和提炼函数一个应用场景；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!aDate.<span class="title function_">isBefore</span>(plan.<span class="property">summerStart</span>) &amp;&amp; !aDate.<span class="title function_">isAfter</span>(plan.<span class="property">summerEnd</span>)) </span><br><span class="line">　charge = quantity * plan.<span class="property">summerRate</span>;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">　charge = quantity * plan.<span class="property">regularRate</span> + plan.<span class="property">regularServiceCharge</span>;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="title function_">summer</span>())</span><br><span class="line">　charge = <span class="title function_">summerCharge</span>(); </span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">　charge = <span class="title function_">regularCharge</span>();</span><br></pre></td></tr></table></figure>
+<h2 id="合并条件表达式："><a href="#合并条件表达式：" class="headerlink" title="合并条件表达式："></a><strong>合并条件表达式：</strong></h2><p>使用“逻辑与”和“逻辑或”将一连串的条件检查合并成一个条件表达式；</p>
+<h2 id="以卫语句取代嵌套条件表达式："><a href="#以卫语句取代嵌套条件表达式：" class="headerlink" title="以卫语句取代嵌套条件表达式："></a><strong>以卫语句取代嵌套条件表达式：</strong></h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">getPayAmount</span>(<span class="params"></span>) &#123; </span><br><span class="line">　<span class="keyword">let</span> result;</span><br><span class="line">　<span class="keyword">if</span> (isDead)</span><br><span class="line">　　result = <span class="title function_">deadAmount</span>(); </span><br><span class="line">　<span class="keyword">else</span> &#123;</span><br><span class="line">　　<span class="keyword">if</span> (isSeparated)</span><br><span class="line">　　　result = <span class="title function_">separatedAmount</span>(); </span><br><span class="line">　　<span class="keyword">else</span> &#123;</span><br><span class="line">　　　<span class="keyword">if</span> (isRetired)</span><br><span class="line">　　　　result = <span class="title function_">retiredAmount</span>(); </span><br><span class="line">　　　<span class="keyword">else</span></span><br><span class="line">　　　　result = <span class="title function_">normalPayAmount</span>();</span><br><span class="line">　　&#125;</span><br><span class="line">　&#125;</span><br><span class="line">　<span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">getPayAmount</span>(<span class="params"></span>) &#123;</span><br><span class="line">　<span class="keyword">if</span> (isDead) <span class="keyword">return</span> <span class="title function_">deadAmount</span>();</span><br><span class="line">　<span class="keyword">if</span> (isSeparated) <span class="keyword">return</span> <span class="title function_">separatedAmount</span>(); </span><br><span class="line">　<span class="keyword">if</span> (isRetired) <span class="keyword">return</span> <span class="title function_">retiredAmount</span>(); </span><br><span class="line">　<span class="keyword">return</span> <span class="title function_">normalPayAmount</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="以多态取代条件表达式："><a href="#以多态取代条件表达式：" class="headerlink" title="以多态取代条件表达式："></a><strong>以多态取代条件表达式：</strong></h2><p>做法：</p>
+<ol>
+<li>若现有的类不具备多态行为。将用工厂函数创建，令工厂函数返回恰当的对象实例；</li>
+<li>在调用方代码中使用工厂函数获得对象实例；</li>
+<li>将有条件逻辑的函数移到超类中；</li>
+<li>任选一个子类，在其中建立一个函数，使之覆写超类中容纳条件表达式的那个函数。将与该子类相关表达式分支复制到新函数中，并对他进行适当调整；</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> (bird.<span class="property">type</span>) &#123;</span><br><span class="line">　<span class="keyword">case</span> <span class="string">&#x27;EuropeanSwallow&#x27;</span>: </span><br><span class="line">　　<span class="keyword">return</span> <span class="string">&quot;average&quot;</span>;</span><br><span class="line">　<span class="keyword">case</span> <span class="string">&#x27;AfricanSwallow&#x27;</span>:</span><br><span class="line">　　<span class="keyword">return</span> (bird.<span class="property">numberOfCoconuts</span> &gt; <span class="number">2</span>) ? <span class="string">&quot;tired&quot;</span> : <span class="string">&quot;average&quot;</span>; </span><br><span class="line">　<span class="keyword">case</span> <span class="string">&#x27;NorwegianBlueParrot&#x27;</span>:</span><br><span class="line">　　<span class="keyword">return</span> (bird.<span class="property">voltage</span> &gt; <span class="number">100</span>) ? <span class="string">&quot;scorched&quot;</span> : <span class="string">&quot;beautiful&quot;</span>; </span><br><span class="line">　<span class="attr">default</span>:</span><br><span class="line">　　<span class="keyword">return</span> <span class="string">&quot;unknown&quot;</span>;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">EuropeanSwallow</span> &#123; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">plumage</span>() &#123;</span><br><span class="line">　　<span class="keyword">return</span> <span class="string">&quot;average&quot;</span>;</span><br><span class="line">　&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">AfricanSwallow</span> &#123; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">plumage</span>() &#123;</span><br><span class="line">　　 <span class="keyword">return</span> (<span class="variable language_">this</span>.<span class="property">numberOfCoconuts</span> &gt; <span class="number">2</span>) ? <span class="string">&quot;tired&quot;</span> : <span class="string">&quot;average&quot;</span>;</span><br><span class="line">　&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">NorwegianBlueParrot</span> &#123; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">plumage</span>() &#123;</span><br><span class="line">　　 <span class="keyword">return</span> (<span class="variable language_">this</span>.<span class="property">voltage</span> &gt; <span class="number">100</span>) ? <span class="string">&quot;scorched&quot;</span> : <span class="string">&quot;beautiful&quot;</span>;</span><br><span class="line"> &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="引入特例："><a href="#引入特例：" class="headerlink" title="引入特例："></a><strong>引入特例：</strong></h2><p>一个数据结构的使用者都在检查某个特殊的值，并且当这个特殊值出现时所做的处理也都相同，此时可以把这个处理逻辑收拢到一处；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Class</span> <span class="title class_">Site</span>&#123;</span><br><span class="line">    <span class="keyword">get</span> <span class="title function_">customer</span>() &#123;<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_customer</span>;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (aCustomer === <span class="string">&quot;unknown&quot;</span>) customerName = <span class="string">&quot;occupant&quot;</span>;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="title class_">Class</span> <span class="title class_">Site</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (<span class="variable language_">this</span>.<span class="property">_customer</span> === <span class="string">&quot;unknown&quot;</span>) ? <span class="keyword">new</span> <span class="title class_">UnknownCustomer</span>() : <span class="variable language_">this</span>.<span class="property">_customer</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">UnknownCustomer</span> &#123;</span><br><span class="line">    <span class="keyword">get</span> <span class="title function_">name</span>() &#123;<span class="keyword">return</span> <span class="string">&quot;occupant&quot;</span>;&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="引入断言："><a href="#引入断言：" class="headerlink" title="引入断言："></a><strong>引入断言：</strong></h2><p>当发现代码某个假设条件始终是真，可以加入一个断言明确说明这种情况，可以预防错误；</p>
+<h1 id="重构API："><a href="#重构API：" class="headerlink" title="重构API："></a><strong>重构API：</strong></h1><h2 id="将查询函数和修改函数分离："><a href="#将查询函数和修改函数分离：" class="headerlink" title="将查询函数和修改函数分离："></a><strong>将查询函数和修改函数分离：</strong></h2><p>若遇到一个“既有返回值又有副作用”的函数，应该试着将查询动作从修改动作中分离出来；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">getTotalOutstandingAndSendBill</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> result = customer.<span class="property">invoices</span>.<span class="title function_">reduce</span>(<span class="function">(<span class="params">total, each</span>) =&gt;</span> each.<span class="property">amount</span> + total, <span class="number">0</span>);</span><br><span class="line">  <span class="title function_">sendBill</span>();</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">totalOutstanding</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> customer.<span class="property">invoices</span>.<span class="title function_">reduce</span>(<span class="function">(<span class="params">total, each</span>) =&gt;</span> each.<span class="property">amount</span> + total, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">sendBill</span>(<span class="params"></span>) &#123; </span><br><span class="line">  emailGateway.<span class="title function_">send</span>(<span class="title function_">formatBill</span>(customer));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="函数参数化："><a href="#函数参数化：" class="headerlink" title="函数参数化："></a><strong>函数参数化：</strong></h2><p>若两个函数逻辑相似，只有一些字面量不同，可以将其合并成一个函数，以参数的形式传入不同的值；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">tenPercentRaise</span>(<span class="params">aPerson</span>) &#123; </span><br><span class="line">  aPerson.<span class="property">salary</span> = aPerson.<span class="property">salary</span>.<span class="title function_">multiply</span>(<span class="number">1.1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">function</span> <span class="title function_">fivePercentRaise</span>(<span class="params">aPerson</span>) &#123; </span><br><span class="line">  aPerson.<span class="property">salary</span> = aPerson.<span class="property">salary</span>.<span class="title function_">multiply</span>(<span class="number">1.05</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">raise</span>(<span class="params">aPerson, factor</span>) &#123;</span><br><span class="line">  aPerson.<span class="property">salary</span> = aPerson.<span class="property">salary</span>.<span class="title function_">multiply</span>(<span class="number">1</span> + factor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="移除标记参数："><a href="#移除标记参数：" class="headerlink" title="移除标记参数："></a><strong>移除标记参数：</strong></h2><p>若调用者传入的是程序中的流动数据，这样的参数不算是标记参数；只有调用者直接传入字面量值，这才是标记参数。在函数实现内部，若参数值只是作为数据传给其他参数，这就不是标记参数；只有当参数值影响了函数内部的控制流，这才是标记参数；</p>
+<h2 id="保持对象完整："><a href="#保持对象完整：" class="headerlink" title="保持对象完整："></a><strong>保持对象完整：</strong></h2><p>若代码从一个记录结构中导出几个值，然后又把这几个值一起传递给一个函数，应该把整个记录传给这个函数，在函数体内部导出所需的值；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> low = aRoom.<span class="property">daysTempRange</span>.<span class="property">low</span>; </span><br><span class="line"><span class="keyword">const</span> high = aRoom.<span class="property">daysTempRange</span>.<span class="property">high</span>; </span><br><span class="line"><span class="keyword">if</span> (aPlan.<span class="title function_">withinRange</span>(low, high))</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (aPlan.<span class="title function_">withinRange</span>(aRoom.<span class="property">daysTempRange</span>))</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="以查询取代参数："><a href="#以查询取代参数：" class="headerlink" title="以查询取代参数："></a><strong>以查询取代参数：</strong></h2><p>函数的参数列表应总结函数的可变性，标示出函数可能体现出行为差异的主要方式，参数列表应该尽量避免重复，若调用函数时传入一个值，这个值由函数自己获得也是同样容易，这就是重复；（获得正确的参数值的责任从调用方转移到函数本身）</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">availableVacation</span>(anEmployee, anEmployee.<span class="property">grade</span>); </span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">availableVacation</span>(<span class="params">anEmployee, grade</span>) &#123;</span><br><span class="line">  <span class="comment">// calculate vacation...</span></span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="title function_">availableVacation</span>(anEmployee)</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">availableVacation</span>(<span class="params">anEmployee</span>) &#123; </span><br><span class="line">  <span class="keyword">const</span> grade = anEmployee.<span class="property">grade</span>;</span><br><span class="line">  <span class="comment">// calculate vacation...</span></span><br></pre></td></tr></table></figure>
+<h2 id="以参数取代查询："><a href="#以参数取代查询：" class="headerlink" title="以参数取代查询："></a><strong>以参数取代查询：</strong></h2><p>使目标函数不再依赖某个元素，可以把这个元素的值以参数的形式传递给该函数；</p>
+<h2 id="移除设值函数："><a href="#移除设值函数：" class="headerlink" title="移除设值函数："></a><strong>移除设值函数：</strong></h2><p>若不希望对象的某个字段在对象在对象创建之后不再改变，应该去掉该字段的设值函数；</p>
+<h2 id="以工厂函数取代构造函数："><a href="#以工厂函数取代构造函数：" class="headerlink" title="以工厂函数取代构造函数："></a><strong>以工厂函数取代构造函数：</strong></h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">leadEngineer = <span class="keyword">new</span> <span class="title class_">Employee</span>(<span class="variable language_">document</span>.<span class="property">leadEngineer</span>, <span class="string">&#x27;E&#x27;</span>);</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line">leadEngineer = <span class="title function_">createEngineer</span>(<span class="variable language_">document</span>.<span class="property">leadEngineer</span>);</span><br></pre></td></tr></table></figure>
+<h2 id="以命令取代函数："><a href="#以命令取代函数：" class="headerlink" title="以命令取代函数："></a><strong>以命令取代函数：</strong></h2><p>将函数封装成自己的对象，称作“命令对象”；命令对象为处理复杂计算提供了强大的机制，可以轻松的将原本复杂的函数拆解成多个方法，彼此之间通过字段共享状态；（当需要命令对象提供的某种能力而普通的函数无法提供时，才选择这种方式）</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">score</span>(<span class="params">candidate, medicalExam, scoringGuide</span>) &#123; </span><br><span class="line">  <span class="keyword">let</span> result = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">let</span> healthLevel = <span class="number">0</span>;</span><br><span class="line">  <span class="comment">// long body code</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Scorer</span> &#123;</span><br><span class="line">  <span class="title function_">constructor</span>(<span class="params">candidate, medicalExam, scoringGuide</span>) &#123; </span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">_candidate</span> = candidate;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">_medicalExam</span> = medicalExam; </span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">_scoringGuide</span> = scoringGuide;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="title function_">execute</span>(<span class="params"></span>) &#123; </span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">_result</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">_healthLevel</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// long body code</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="以函数取代命令："><a href="#以函数取代命令：" class="headerlink" title="以函数取代命令："></a><strong>以函数取代命令：</strong></h2><p>大多数时候，只是想调用一个函数，且该函数不复杂，此时就可以考虑将命令对象变回函数；</p>
+<h1 id="处理继承关系："><a href="#处理继承关系：" class="headerlink" title="处理继承关系："></a><strong>处理继承关系：</strong></h1><ul>
+<li>函数上移：</li>
+</ul>
+<p>若某个函数在各个子类中的函数体都相同，此时可以进行函数上移；</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Employee</span> &#123;...&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Salesman</span> <span class="keyword">extends</span> <span class="title class_ inherited__">Employee</span> &#123; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">name</span>() &#123;...&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Engineer</span> <span class="keyword">extends</span> <span class="title class_ inherited__">Employee</span> &#123; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">name</span>() &#123;...&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Employee</span> &#123; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">name</span>() &#123;...&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Salesman</span> <span class="keyword">extends</span> <span class="title class_ inherited__">Employee</span> &#123;...&#125; </span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Engineer</span> <span class="keyword">extends</span> <span class="title class_ inherited__">Employee</span> &#123;...&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>字段上移：子类字段名字、含义类似，存在重复，应将其提炼到超类中；</li>
+<li>构造函数本体上移：</li>
+<li>函数下移：若超类中的某个函数只与一个子类有关，那么最好将其从超类中移动到真正关心它的子类中去；</li>
+<li>字段下移：若一个字段只被一个子类用到，就将其搬移到需要该字段的子类中去；</li>
+<li>以子类取代类型码：有时需要表现“相似但又不同的东西”，此时可以引入子类，可以用多态取代条件表达式；</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">createEmployee</span>(<span class="params">name, type</span>) &#123; </span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Employee</span>(name, type);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">createEmployee</span>(<span class="params">name, type</span>) &#123; </span><br><span class="line">  <span class="keyword">switch</span> (type) &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&quot;engineer&quot;</span>: <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Engineer</span>(name); </span><br><span class="line">    <span class="keyword">case</span> <span class="string">&quot;salesman&quot;</span>: <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Salesman</span>(name); </span><br><span class="line">    <span class="keyword">case</span> <span class="string">&quot;manager&quot;</span>: <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Manager</span> (name);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>移除子类：子类的用处太少时，可以将其移除，新建一个字段来表示不同的子类，新建工厂函数来创建字段值不同的不同对象，来表示不同的子类的含义；</li>
+<li>提炼超类：若两个类在做相似的事，可以利用继承机制将他们的相似之处提炼到超类（字段上移、函数上移）；</li>
+<li>折叠继承体系：随着继承体系的演进，有时一个类与超类差别已经不大了，此时需要将超类和子类合并起来；（需要明确删除子类还是超类）</li>
+<li>以委托取代子类：委托优于继承，继承只能处理一个方向上的变化，同时给类之间引入了非常紧密的关系，而委托时对象之间常规的关系（对于不同变化的原因，可以委托给不同的类），使用委托接口更清晰，耦合更少；</li>
+</ul>
+<p>做法：</p>
+<ol>
+<li>创建一个空的委托类，这个类的构造函数接受所有子类特有的数据项，并且经常以参数的形式接受一个指回超类的引用；</li>
+<li>在超类中添加一个字段，用于安放委托对象；</li>
+<li>修改子类的创建逻辑，使其初始化上述委托字段，放入一个委托对象的实例；</li>
+<li>选择一个子类中的函数，将其移入委托类；</li>
+<li>若被搬移的源函数还在子类之外被调用了，就把留在源类中的委托代码从子类移到超类，并在委托代码前加上卫语句，检查委托对象存在。若子类之外没有其他调用者，就移除死代码；</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Order</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">daysToShip</span>() &#123;</span><br><span class="line">　　<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_warehouse</span>.<span class="property">daysToShip</span>;</span><br><span class="line">　&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PriorityOrder</span> <span class="keyword">extends</span> <span class="title class_ inherited__">Order</span> &#123; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">daysToShip</span>() &#123;</span><br><span class="line">　　<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_priorityPlan</span>.<span class="property">daysToShip</span>;</span><br><span class="line">　&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Order</span> &#123;</span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">daysToShip</span>() &#123;</span><br><span class="line">　　<span class="keyword">return</span> (<span class="variable language_">this</span>.<span class="property">_priorityDelegate</span>)</span><br><span class="line">　　　? <span class="variable language_">this</span>.<span class="property">_priorityDelegate</span>.<span class="property">daysToShip</span></span><br><span class="line">　　　: <span class="variable language_">this</span>.<span class="property">_warehouse</span>.<span class="property">daysToShip</span>;</span><br><span class="line">　&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PriorityOrderDelegate</span> &#123; </span><br><span class="line">　<span class="keyword">get</span> <span class="title function_">daysToShip</span>() &#123;</span><br><span class="line">　　<span class="keyword">return</span> <span class="variable language_">this</span>.<span class="property">_priorityPlan</span>.<span class="property">daysToShip</span></span><br><span class="line">　&#125;</span><br><span class="line">&#125;</span><br><span class="line">　&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>以委托取代超类：子类的所有实例都应该是超类的实例，通过超类的接口来使用子类的实例应该完全不出问题。若超类的一些函数对子类并不适用，就应该将部分职能委托给另一个对象，使用委托表达“这是另一个东西，我只是需要其中携带的一些功能”</li>
+</ul>
+<p>做法：</p>
+<ol>
+<li>在子类中新建一个字段，使其引用超类的一个对象，并将这个委托引用初始化为超类的新实例；</li>
+<li>针对超类的每个函数，在子类中创建一个转发函数，将调用请求转发给委托引用；</li>
+<li>当所有超类函数都被转发函数覆写后，就可以去掉继承关系；</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">List</span> &#123;...&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Stack</span> <span class="keyword">extends</span> <span class="title class_ inherited__">List</span> &#123;…&#125;</span><br><span class="line"></span><br><span class="line">⬇️</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Stack</span> &#123; </span><br><span class="line">  <span class="title function_">constructor</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">_storage</span> = <span class="keyword">new</span> <span class="title class_">List</span>();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">List</span> &#123;...&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B7%A5%E7%A8%8B%E7%B4%A0%E5%85%BB/" rel="tag"># 工程素养</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1/" rel="prev" title="微服务接口设计">
+      <i class="fa fa-chevron-left"></i> 微服务接口设计
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/25/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93/" rel="next" title="代码整洁之道">
+      代码整洁之道 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%9C%80%E8%A6%81%E9%87%8D%E6%9E%84%E7%9A%84%E5%9C%BA%E6%99%AF%EF%BC%9A%EF%BC%8823%E7%A7%8D%E5%9D%8F%E5%91%B3%E9%81%93%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">需要重构的场景：（23种坏味道）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E6%9E%84%E7%9A%84%E6%96%B9%E6%B3%95%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">重构的方法：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%81%E8%A3%85%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">封装：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%81%E8%A3%85%E8%AE%B0%E5%BD%95%EF%BC%9A"><span class="nav-number">3.1.</span> <span class="nav-text">封装记录：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%81%E8%A3%85%E9%9B%86%E5%90%88%EF%BC%9A"><span class="nav-number">3.2.</span> <span class="nav-text">封装集合：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%AF%B9%E8%B1%A1%E5%8F%96%E4%BB%A3%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%EF%BC%9A"><span class="nav-number">3.3.</span> <span class="nav-text">以对象取代基本类型：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E6%9F%A5%E8%AF%A2%E5%8F%96%E4%BB%A3%E4%B8%B4%E6%97%B6%E5%8F%98%E9%87%8F%EF%BC%9A"><span class="nav-number">3.4.</span> <span class="nav-text">以查询取代临时变量：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%90%E7%82%BC%E7%B1%BB%EF%BC%9A"><span class="nav-number">3.5.</span> <span class="nav-text">提炼类：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E8%81%94%E7%B1%BB%EF%BC%9A"><span class="nav-number">3.6.</span> <span class="nav-text">内联类：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%90%E8%97%8F%E5%A7%94%E6%89%98%E5%85%B3%E7%B3%BB%EF%BC%9A"><span class="nav-number">3.7.</span> <span class="nav-text">隐藏委托关系：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%BB%E9%99%A4%E4%B8%AD%E9%97%B4%E4%BA%BA%EF%BC%9A"><span class="nav-number">3.8.</span> <span class="nav-text">移除中间人：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%BF%E6%8D%A2%E7%AE%97%E6%B3%95%EF%BC%9A"><span class="nav-number">3.9.</span> <span class="nav-text">替换算法：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%90%AC%E7%A7%BB%E7%89%B9%E6%80%A7%EF%BC%9A"><span class="nav-number">4.</span> <span class="nav-text">搬移特性：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AC%E7%A7%BB%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="nav-number">4.1.</span> <span class="nav-text">搬移函数：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AC%E7%A7%BB%E5%AD%97%E6%AE%B5%EF%BC%9A"><span class="nav-number">4.2.</span> <span class="nav-text">搬移字段：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AC%E7%A7%BB%E8%AF%AD%E5%8F%A5%E5%88%B0%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="nav-number">4.3.</span> <span class="nav-text">搬移语句到函数：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AC%E7%A7%BB%E8%AF%AD%E5%8F%A5%E5%88%B0%E8%B0%83%E7%94%A8%E8%80%85%EF%BC%9A"><span class="nav-number">4.4.</span> <span class="nav-text">搬移语句到调用者：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E5%8F%96%E4%BB%A3%E5%86%85%E8%81%94%E4%BB%A3%E7%A0%81%EF%BC%9A"><span class="nav-number">4.5.</span> <span class="nav-text">以函数调用取代内联代码：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%BB%E5%8A%A8%E8%AF%AD%E5%8F%A5%EF%BC%9A"><span class="nav-number">4.6.</span> <span class="nav-text">移动语句：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%86%E5%88%86%E5%BE%AA%E7%8E%AF%EF%BC%9A"><span class="nav-number">4.7.</span> <span class="nav-text">拆分循环：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E7%AE%A1%E9%81%93%E5%8F%96%E4%BB%A3%E5%BE%AA%E7%8E%AF%EF%BC%9A"><span class="nav-number">4.8.</span> <span class="nav-text">以管道取代循环：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%BB%E9%99%A4%E6%AD%BB%E4%BB%A3%E7%A0%81%EF%BC%9A"><span class="nav-number">4.9.</span> <span class="nav-text">移除死代码：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E6%96%B0%E7%BB%84%E7%BB%87%E6%95%B0%E6%8D%AE%EF%BC%9A"><span class="nav-number">5.</span> <span class="nav-text">重新组织数据：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%86%E5%88%86%E5%8F%98%E9%87%8F%EF%BC%9A"><span class="nav-number">5.1.</span> <span class="nav-text">拆分变量：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E6%AE%B5%E6%94%B9%E5%90%8D%EF%BC%9A"><span class="nav-number">5.2.</span> <span class="nav-text">字段改名：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E6%9F%A5%E8%AF%A2%E5%8F%96%E4%BB%A3%E6%B4%BE%E7%94%9F%E5%8F%98%E9%87%8F%EF%BC%9A"><span class="nav-number">5.3.</span> <span class="nav-text">以查询取代派生变量：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%86%E5%BC%95%E7%94%A8%E5%AF%B9%E8%B1%A1%E6%94%B9%E4%B8%BA%E5%80%BC%E5%AF%B9%E8%B1%A1%EF%BC%9A"><span class="nav-number">5.4.</span> <span class="nav-text">将引用对象改为值对象：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%86%E5%80%BC%E5%AF%B9%E8%B1%A1%E6%94%B9%E4%B8%BA%E5%BC%95%E7%94%A8%E5%AF%B9%E8%B1%A1%EF%BC%9A"><span class="nav-number">5.5.</span> <span class="nav-text">将值对象改为引用对象：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E5%8C%96%E6%9D%A1%E4%BB%B6%E9%80%BB%E8%BE%91%EF%BC%9A"><span class="nav-number">6.</span> <span class="nav-text">简化条件逻辑：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E8%A7%A3%E6%9D%A1%E4%BB%B6%E8%A1%A8%E8%BE%BE%E5%BC%8F%EF%BC%9A"><span class="nav-number">6.1.</span> <span class="nav-text">分解条件表达式：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E5%B9%B6%E6%9D%A1%E4%BB%B6%E8%A1%A8%E8%BE%BE%E5%BC%8F%EF%BC%9A"><span class="nav-number">6.2.</span> <span class="nav-text">合并条件表达式：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%8D%AB%E8%AF%AD%E5%8F%A5%E5%8F%96%E4%BB%A3%E5%B5%8C%E5%A5%97%E6%9D%A1%E4%BB%B6%E8%A1%A8%E8%BE%BE%E5%BC%8F%EF%BC%9A"><span class="nav-number">6.3.</span> <span class="nav-text">以卫语句取代嵌套条件表达式：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%A4%9A%E6%80%81%E5%8F%96%E4%BB%A3%E6%9D%A1%E4%BB%B6%E8%A1%A8%E8%BE%BE%E5%BC%8F%EF%BC%9A"><span class="nav-number">6.4.</span> <span class="nav-text">以多态取代条件表达式：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E5%85%A5%E7%89%B9%E4%BE%8B%EF%BC%9A"><span class="nav-number">6.5.</span> <span class="nav-text">引入特例：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E5%85%A5%E6%96%AD%E8%A8%80%EF%BC%9A"><span class="nav-number">6.6.</span> <span class="nav-text">引入断言：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E6%9E%84API%EF%BC%9A"><span class="nav-number">7.</span> <span class="nav-text">重构API：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%86%E6%9F%A5%E8%AF%A2%E5%87%BD%E6%95%B0%E5%92%8C%E4%BF%AE%E6%94%B9%E5%87%BD%E6%95%B0%E5%88%86%E7%A6%BB%EF%BC%9A"><span class="nav-number">7.1.</span> <span class="nav-text">将查询函数和修改函数分离：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0%E5%8C%96%EF%BC%9A"><span class="nav-number">7.2.</span> <span class="nav-text">函数参数化：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%BB%E9%99%A4%E6%A0%87%E8%AE%B0%E5%8F%82%E6%95%B0%EF%BC%9A"><span class="nav-number">7.3.</span> <span class="nav-text">移除标记参数：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%9D%E6%8C%81%E5%AF%B9%E8%B1%A1%E5%AE%8C%E6%95%B4%EF%BC%9A"><span class="nav-number">7.4.</span> <span class="nav-text">保持对象完整：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E6%9F%A5%E8%AF%A2%E5%8F%96%E4%BB%A3%E5%8F%82%E6%95%B0%EF%BC%9A"><span class="nav-number">7.5.</span> <span class="nav-text">以查询取代参数：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%8F%82%E6%95%B0%E5%8F%96%E4%BB%A3%E6%9F%A5%E8%AF%A2%EF%BC%9A"><span class="nav-number">7.6.</span> <span class="nav-text">以参数取代查询：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%BB%E9%99%A4%E8%AE%BE%E5%80%BC%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="nav-number">7.7.</span> <span class="nav-text">移除设值函数：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%B7%A5%E5%8E%82%E5%87%BD%E6%95%B0%E5%8F%96%E4%BB%A3%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="nav-number">7.8.</span> <span class="nav-text">以工厂函数取代构造函数：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%91%BD%E4%BB%A4%E5%8F%96%E4%BB%A3%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="nav-number">7.9.</span> <span class="nav-text">以命令取代函数：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%87%BD%E6%95%B0%E5%8F%96%E4%BB%A3%E5%91%BD%E4%BB%A4%EF%BC%9A"><span class="nav-number">7.10.</span> <span class="nav-text">以函数取代命令：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB%EF%BC%9A"><span class="nav-number">8.</span> <span class="nav-text">处理继承关系：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">bank</p>
+  <div class="site-description" itemprop="description">行至水穷处,坐看云起时</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">bank</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
