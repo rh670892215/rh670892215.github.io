@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta property="og:type" content="article">
+<meta property="og:title" content="linux内核">
+<meta property="og:url" content="http://example.com/2023/07/11/linux%E5%86%85%E6%A0%B8%E7%AD%96%E7%95%A5/index.html">
+<meta property="og:site_name" content="bank blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/kill.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/%E4%B8%AD%E6%96%AD%E8%AE%BE%E5%A4%87.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/%E4%B8%AD%E6%96%AD%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/%E4%B8%AD%E6%96%AD%E8%AE%BE%E5%A4%87cpu%E4%BA%B2%E7%BC%98%E6%80%A7.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/vmstat.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/%E7%A1%AC%E4%BB%B6%E5%A7%8B%E6%97%B6%E9%92%9F%E4%B8%AD%E6%96%AD.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/nice.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/chrt.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/cfs.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/cgroup.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/cgroup_res.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/50percent_cpu.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/cpu_shares.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/iostat.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/dumpe2fs.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/ext4%E7%9A%84inode%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/cfq.png">
+<meta property="article:published_time" content="2023-07-11T13:23:19.933Z">
+<meta property="article:modified_time" content="2023-07-17T13:43:29.162Z">
+<meta property="article:author" content="bank">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/linux%E5%86%85%E6%A0%B8.resources/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81.png">
+
+<link rel="canonical" href="http://example.com/2023/07/11/linux%E5%86%85%E6%A0%B8%E7%AD%96%E7%95%A5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>linux内核 | bank blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">bank blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/11/linux%E5%86%85%E6%A0%B8%E7%AD%96%E7%95%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="bank">
+      <meta itemprop="description" content="行至水穷处,坐看云起时">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="bank blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          linux内核
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-07-11 21:23:19" itemprop="dateCreated datePublished" datetime="2023-07-11T21:23:19+08:00">2023-07-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-17 21:43:29" itemprop="dateModified" datetime="2023-07-17T21:43:29+08:00">2023-07-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <meta name="referrer" content="no-referrer"/>
+<span id="more"></span>
+
+<h1 id="linux内核"><a href="#linux内核" class="headerlink" title="linux内核"></a>linux内核</h1><h2 id="CPU"><a href="#CPU" class="headerlink" title="CPU"></a>CPU</h2><h3 id="系统指令"><a href="#系统指令" class="headerlink" title="系统指令"></a>系统指令</h3><h4 id="top"><a href="#top" class="headerlink" title="top"></a>top</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">top - 21:30:37 up 597 days,  6:38,  0 users,  load average: 68.76, 57.83, 57.39</span><br><span class="line">Tasks:  10 total,   1 running,   9 sleeping,   0 stopped,   0 zombie</span><br><span class="line"><span class="meta prompt_">%</span><span class="language-bash">Cpu(s): 41.7 us,  8.3 sy,  0.1 ni, 44.8 <span class="built_in">id</span>,  0.0 wa,  0.0 hi,  5.1 si,  0.0 st</span></span><br><span class="line">KiB Mem : 19707564+total,  4198476 free, 84425392 used, 10845178+buff/cache</span><br><span class="line">KiB Swap:        0 total,        0 free,        0 used. 89777152 avail Mem </span><br><span class="line"></span><br><span class="line">    PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                                            </span><br><span class="line">    303 mqq       20   0 1382892 234556  19256 S  13.0  0.1   9009:54 operation_trace                                                    </span><br><span class="line">  77433 mqq       20   0 1018064  57600  27708 S   1.7  0.0  30:40.80 coa                                                                </span><br><span class="line">      1 mqq       20   0  706864   5648   2516 S   0.0  0.0   7:55.48 entry                                                              </span><br><span class="line">     14 mqq       20   0  115276   2616   2268 S   0.0  0.0   0:00.00 sh                                                                 </span><br><span class="line">     37 mqq       20   0  706196   3256   1708 S   0.0  0.0  12:41.55 beein_watchdog                                                     </span><br><span class="line">    304 mqq       20   0  107904   1812   1708 S   0.0  0.0   0:00.00 tee                                                                </span><br><span class="line">  77432 mqq       20   0   11656   2812   2536 S   0.0  0.0   0:00.00 sh                                                                 </span><br><span class="line">2106560 mqq       20   0  115412   3532   3044 S   0.0  0.0   0:00.03 bash                                                               </span><br><span class="line">2168159 mqq       20   0  157564   4280   3724 R   0.0  0.0   0:00.02 top                                                                </span><br><span class="line">2739459 mqq       20   0  115412   3404   2916 S   0.0  0.0   0:00.02 bash</span><br></pre></td></tr></table></figure>
+<p>top指令可以称得上是最常用的性能调试指令了，下面对每部分的参数进行讨论。<br>统计信息区前五行是系统的整体信息。<br>第一行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">21:30:37                                当前时间</span><br><span class="line">up 597 days,  6:38,                     系统已运行时间</span><br><span class="line">0 users,                                当前登陆用户数</span><br><span class="line">load average: 68.76, 57.83, 57.39       系统负载，即任务队列中R状态的进程个数。三个数值分别为 1分钟、5分钟、15分钟前到现在的平均值。三个值越来越高，说明系统负载在下降</span><br></pre></td></tr></table></figure>
+<p>第二行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Tasks:  10 total,   1 running,   9 sleeping,   0 stopped,   0 zombie</span><br><span class="line">total：     进程总数</span><br><span class="line">running：   正在运行的进程数</span><br><span class="line">sleeping：  休眠中的进程数</span><br><span class="line">stopped：   停止的进程数</span><br><span class="line">zombie：    僵尸进程数</span><br></pre></td></tr></table></figure>
+<p>第三行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">%Cpu(s): 41.7 us,  8.3 sy,  0.1 ni, 44.8 id,  0.0 wa,  0.0 hi,  5.1 si,  0.0 st</span><br><span class="line">us：用户态占用CPU百分比</span><br><span class="line">sy：内核态占用CPU百分比</span><br><span class="line">ni：nice进程（低优先级进程）占用CPU百分比</span><br><span class="line">id：空闲CPU百分比</span><br><span class="line">wa：等待IO的CPU百分比</span><br><span class="line">hi：硬中断CPU占用百分比</span><br><span class="line">si：软中断CPU占用百分比</span><br><span class="line">st：虚拟机CPU占用百分比</span><br></pre></td></tr></table></figure>
+<p>第四行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">KiB Mem : 19707564+total,  4198476 free, 84425392 used, 10845178+buff/cache</span><br><span class="line">Mem:</span><br><span class="line">total:      物理内存总量</span><br><span class="line">free:       空闲内存总量</span><br><span class="line">used:       使用的物理内存总量</span><br><span class="line">buff/cache: 操作系统对于文件系统的缓存</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">这里的buff/cache有必要讨论一下，在linux2.6之前，buf是写缓冲，而cache是读缓存，是分开存储的。在linux2.6之后，文件的读缓冲和写缓存合并到一起了，cache指的是page cache，缓存文件的实际数据，而buf指的是buffer cache，缓存文件在磁盘块中对应的位置，方便后续写入的时候快速定位。</span><br></pre></td></tr></table></figure>
+
+<p>第五行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">KiB Swap:        0 total,        0 free,        0 used. 89777152 avail Mem</span><br><span class="line">Swap: </span><br><span class="line">total：         交换区总量</span><br><span class="line">used：          使用的交换区总量</span><br><span class="line">free：          空闲交换区总量</span><br><span class="line">avail Mem：</span><br></pre></td></tr></table></figure>
+<p>进程信息：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">PID：                 进程的标识符。</span><br><span class="line">USER：                运行进程的用户名。</span><br><span class="line">PR（优先级）：          进程的优先级。</span><br><span class="line">NI（Nice值）：         进程的优先级调整值。</span><br><span class="line">VIRT（虚拟内存）：      进程使用的虚拟内存大小。</span><br><span class="line">RES（常驻内存）：       进程实际使用的物理内存大小。</span><br><span class="line">SHR（共享内存）：       进程共享的内存大小。</span><br><span class="line">S：                   进程状态。</span><br><span class="line">%CPU：                进程占用 CPU 的使用率。</span><br><span class="line">%MEM：                进程占用内存的使用率。</span><br><span class="line">TIME+：               进程的累计 CPU 时间。</span><br></pre></td></tr></table></figure>
+
+<p>这里介绍一下进程的各种状态，可通过如下指令进行查看：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">man ps</span><br><span class="line">/STAT</span><br></pre></td></tr></table></figure>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81.png" alt="进程状态"></p>
+<ul>
+<li>R：执行</li>
+<li>S：可中断的休眠状态</li>
+<li>D：不可中断的休眠状态</li>
+<li>T：暂停状态  （Ctrl+z或kill -19）</li>
+<li>Z：僵尸状态zombie（僵尸进程太多可能导致pid号用尽，没法开新进程）</li>
+<li>X：不可见状态</li>
+</ul>
+<p>————————————————————————————————————————————</p>
+<ul>
+<li>L：有线程的进程</li>
+<li>&lt;：高优先级</li>
+<li>NI：低优先级</li>
+<li>S：session的leader（有子进程的进程）</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">孤儿进程：</span><br><span class="line">子进程未退出，但是父进程退出了，子进程就会变成孤儿进程，这时子进程会由1号进程接管，1号进程作为孤儿进程的父进程，这也是解决僵尸进程的一种办法，kill掉僵尸进程的父进程，使其由1号进程接管，大多数情况下1号进程可以回收这些僵尸进程。</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看可以向进程发送的信号</span></span><br><span class="line">kill -l</span><br></pre></td></tr></table></figure>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/kill.png" alt="kill"></p>
+<h4 id="sar"><a href="#sar" class="headerlink" title="sar"></a>sar</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sar -P [cpu编号] [每隔几s采样一次]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">[/usr/local/trpc/log]$ </span><span class="language-bash">sar -P 0 1</span></span><br><span class="line">Linux 5.4.119-1-tlinux4-0007 (9-138-158-64)     07/12/2023      _x86_64_        (90 CPU)</span><br><span class="line"></span><br><span class="line">10:46:27 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle</span><br><span class="line">10:46:28 PM       0     25.25      0.00     13.13      3.03      0.00     58.59</span><br><span class="line">10:46:29 PM       0     28.72      0.00      9.57      0.00      0.00     61.70</span><br><span class="line">10:46:30 PM       0     43.43      0.00      9.09      0.00      0.00     47.47</span><br></pre></td></tr></table></figure>
+
+<h4 id="mpstat"><a href="#mpstat" class="headerlink" title="mpstat"></a>mpstat</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mpstat [-P] [每隔几s采样一次]</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">[/usr/local/trpc/log]$ </span><span class="language-bash">mpstat 1</span></span><br><span class="line">Linux 5.4.119-1-tlinux4-0007 (9-138-158-64)     07/12/2023      _x86_64_        (90 CPU)</span><br><span class="line"></span><br><span class="line">10:48:37 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">10:48:38 PM  all   30.92    0.09    6.90    0.08    0.00    4.26    0.00    0.00    0.00   57.75</span><br><span class="line">10:48:39 PM  all   26.39    0.00    8.70    0.00    0.00    4.13    0.00    0.00    0.00   60.78</span><br><span class="line">10:48:40 PM  all   33.28    0.00    6.91    0.01    0.00    4.34    0.00    0.00    0.00   55.46</span><br><span class="line">10:48:41 PM  all   30.26    0.00    6.84    0.08    0.00    4.19    0.00    0.00    0.00   58.63</span><br><span class="line">10:48:42 PM  all   30.79    0.00    9.33    0.00    0.00    4.14    0.00    0.00    0.00   55.74</span><br><span class="line">10:48:43 PM  all   30.22    0.00    6.20    0.01    0.00    4.23    0.00    0.00    0.00   59.34</span><br><span class="line">10:48:44 PM  all   27.21    0.00    6.28    0.00    0.00    4.29    0.00    0.00    0.00   62.21</span><br></pre></td></tr></table></figure>
+
+<p>irq：硬中断<br>soft：软中断</p>
+<p>以网卡接收数据包为例，cpu把一次网卡数据接收分成中断的上半部和下半部，其中上半部是硬中断<code>irq</code>，只负责数据的接收，具体的协议解包等操作放在中断的下半部进行处理，其中软中断是中断下半部的一种实现方式。</p>
+<h4 id="perf"><a href="#perf" class="headerlink" title="perf"></a>perf</h4><h4 id="pidstat"><a href="#pidstat" class="headerlink" title="pidstat"></a>pidstat</h4><h4 id="cat-x2F-proc-x2F-cpuinfo"><a href="#cat-x2F-proc-x2F-cpuinfo" class="headerlink" title="cat &#x2F;proc&#x2F;cpuinfo"></a>cat &#x2F;proc&#x2F;cpuinfo</h4><p>查看CPU硬件配置信息，<br>bogomips：CPU每秒钟可以跑多少百万的CPU指令(整数运算单元)，相对比较客观的对CPU运算能力的评估。</p>
+<h3 id="NUMA"><a href="#NUMA" class="headerlink" title="NUMA"></a>NUMA</h3><p>NUMA技术</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">numactl -H</span><br><span class="line"></span><br><span class="line">numastat</span><br></pre></td></tr></table></figure>
+
+<h3 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h3><p>中断：CPU的异步机制，一般由CPU外围的硬件来实现中断，如键盘、网卡，中断发送给中断控制器，中断控制器再向CPU发信号。<br>查看系统中支持哪些中断设备：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/interrupt</span><br></pre></td></tr></table></figure>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/%E4%B8%AD%E6%96%AD%E8%AE%BE%E5%A4%87.png" alt="中断设备"><br>可以看到两张网卡分别被cpu0、cpu1响应了中断。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cd /proc/irq</span><br></pre></td></tr></table></figure>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/%E4%B8%AD%E6%96%AD%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6.png" alt="中断设备文件描述符"><br>根据中断设备的编号，可以看到中断设备的详细配置信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/irq/[num]/smp_affinity</span><br></pre></td></tr></table></figure>
+<p>上述目录下的文件可以看到当前设备的cpu亲缘性，可以通过echo执行自定义CPU亲缘性，一般用于追求极致性能。<br><img src="/linux%E5%86%85%E6%A0%B8.resources/%E4%B8%AD%E6%96%AD%E8%AE%BE%E5%A4%87cpu%E4%BA%B2%E7%BC%98%E6%80%A7.png" alt="中断设备cpu亲缘性"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vmstat 1</span><br></pre></td></tr></table></figure>
+<p>in：中断次数<br>cs：上下文切换次数<br><img src="/linux%E5%86%85%E6%A0%B8.resources/vmstat.png" alt="vmstat"></p>
+<p>时钟信号中断频率：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /boot/config-5.4.119-1-tlinux4-0008 | grep HZ</span><br></pre></td></tr></table></figure>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/%E7%A1%AC%E4%BB%B6%E5%A7%8B%E6%97%B6%E9%92%9F%E4%B8%AD%E6%96%AD.png" alt="硬件始时钟中断"><br>如图可以看出，系统中当前的始终中断频率是每秒钟250次。通过调整这个值可以调整服务器更倾向于高响应速度和高吞吐量，比如上图中的系统，就被配置成了高吞吐量，时钟中断频率较低，减少上下文切换的次数。（时间片轮转，时间片较大）</p>
+<h3 id="调度器"><a href="#调度器" class="headerlink" title="调度器"></a>调度器</h3><p><strong>O1调度器</strong><br>进程可分成如下两类：</p>
+<ul>
+<li>IO消耗型进程</li>
+<li>CPU消耗型进程</li>
+</ul>
+<p>而<code>O1调度器</code>倾向于IO消耗型，cpu消耗型的时间片缩短，放大IO消耗型的时间片，可以设置NI（静态优先级）范围-20~19。如下图：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">man nice</span><br></pre></td></tr></table></figure>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/nice.png" alt="nice"><br>NI（静态优先级），nice值，值越大优先级越低，可以通过<code>renice</code>对其进行调整，同时设置好NI之后内核会根据实际情况调整PR（动态优先级）<br>新版本（Linux2.几之后）优先级分成0-139，之前的-20-19对应100-139,0-99是实时进程优先级（同样值越大优先级越低），使用<code>chrt</code>可以建该进程设置成实时进程优先级；（实时进程很快），切换成实时进程不再使用O1调度算法，使用RR、FIFO<br><img src="/linux%E5%86%85%E6%A0%B8.resources/chrt.png" alt="chrt"><br>对于老版本的服务器，<code>top</code>命令中展示的<code>PR</code>值可能会动态调整，最多在<code>-5 ~ +5</code>之间浮动，如：IO消耗性进程PR值-5，CPU消耗性进程PR值+5。但是对于新版本的服务器就不会动态调整了，因为不再使用O1调度器了。</p>
+<p><strong>CFS调度器</strong><br>完全公平调度保证该进程在预期时间内一定能被执行，<br><code>/proc/sys/kernel/sched_latency_ns</code>文件下存储了这个预期时间,具体的时间片是这个时间除以所有R状态的进程个数；<br>同时<code>/proc/sys/kernel/sched_min_granularity_ns</code>文件下存储了最小时间片（进程得到的最小执行时间）<br>当第一步计算的每个进程的执行时间小于第二个时间时，将第二个时间当做时间片；<br><img src="/linux%E5%86%85%E6%A0%B8.resources/cfs.png" alt="cfs"><br>单位：ns</p>
+<p>底层使用红黑树，key为进程占用cpu时间，占用cpu时间少的进程会被添加到左子树，也就越先优先调度，执行之后其执行时间增加，再加回红黑树；对于IO型进程，经常会主动让出cpu等待IO，其占用cpu的时间就较短，所以其被优先调度的几率就越高，也就天然形成IO消耗型进程优先级更高，这也就导致了上面说过的内核不再动态调整进程优先级了，因为在调度算法层面解决了使IO消耗型进程优先级较高的问题。</p>
+<p>每个cpu内部都有一个这样的红黑树，通过计算整个红黑树的一个标准值，将标准值赋给这个key值；（否则可能会导致一个父进程通过不断开启新的子进程来达到一直占用cpu的目的）</p>
+<h3 id="资源隔离"><a href="#资源隔离" class="headerlink" title="资源隔离"></a>资源隔离</h3><p>首先来讨论一下cgroup，路径<code>/sys/fs/cgroup</code>下面可以设置资源隔离。<br><strong>配置进程的cpu亲缘性</strong><br>在<code>/sys/fs/cgroup/cpuset</code>路径下新建文件夹表示就是新建了一个用户组，系统会自动在文件夹中生成各种文件，通过配置文件的内容，可以对用户组进行配置。如：<br><img src="/linux%E5%86%85%E6%A0%B8.resources/cgroup.png" alt="cgroup"><br>配置<code>cpuset.cpus</code>文件表示该用户组的进程运行在哪个cpu上，如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;1,2&quot;</span> &gt; cpuset.cpus</span><br></pre></td></tr></table></figure>
+
+<p><code>cpuset.mems</code>文件，指定改用户组的进程在哪个numa节点上运行，一般与<code>cpuset.cpus</code>文件搭配使用，如果<code>cpuset.mems</code>文件不配置，cpuset.cpus文件的配置不生效</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;1,2&quot;</span> &gt; cpuset.cpus</span><br></pre></td></tr></table></figure>
+
+<p>指定cpu运行指定进程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cgexec -g cpuset:bankren ./prime &amp;&gt; /dev/null &amp;</span><br></pre></td></tr></table></figure>
+<p>代码地址：<a href=""></a><br>执行结果：<br><img src="/linux%E5%86%85%E6%A0%B8.resources/cgroup_res.png" alt="cgroup_res"><br>可以看到只有配置的1,2号的cpu存在占用。</p>
+<p><strong>配置进程占用cpu的上限（配额）</strong><br><code>cat cpu.cfs_period_us</code>：cpu在1s内被分成多少份；<br><code>cat cpu.cfs_quota_us</code>：进程执行多长时间就必须要让出cpu<br>注意上面的参数是设置的单个cpu，要想实现设置进程占整个系统cpu的份额，需要<code>cpu.cfs_quota_us</code>再乘上全部的cpu数量；<br>见如下的测试，实现进程只占用50%的cpu，测试的机器有8个cpu：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /sys/fs/cgroup/cpu</span><br><span class="line"><span class="built_in">mkdir</span> bank</span><br><span class="line"><span class="built_in">echo</span> 400000 &gt; cpu.cfs_quota_us</span><br><span class="line">cgexec -g cpu:bank ./prime &amp;&gt; /dev/null &amp;</span><br></pre></td></tr></table></figure>
+<p>参数<code>400000</code>的确定方式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/cpu/bank]<span class="comment"># cat cpu.cfs_period_us</span></span><br><span class="line">100000</span><br><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/cpu/bank]<span class="comment"># cat cpu.cfs_quota_us</span></span><br><span class="line">-1</span><br></pre></td></tr></table></figure>
+<p>100000 * 0.5 * 8 &#x3D; 400000</p>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/50percent_cpu.png" alt="50percent_cpu"></p>
+<p><strong>配置进程的cpu占用比例</strong><br>设置两个进程占用cpu的比率是2:1。<br>设置<code>cpu.shares</code>文件的值，默认是1024，设置如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/cpu/bank]<span class="comment"># echo 2048 &gt; cpu.shares</span></span><br><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/cpu/bank]<span class="comment"># cat cpu.shares</span></span><br><span class="line">2048</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cgexec -g cpu:bank ./prime &amp;&gt; /dev/null &amp;</span><br><span class="line">cgexec -g cpu:sam ./prime &amp;&gt; /dev/null &amp;</span><br></pre></td></tr></table></figure>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/cpu_shares.png" alt="cpu_shares"></p>
+<p>tip：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /sys/fs/cgroup/cpu/bank/tasks </span><br></pre></td></tr></table></figure>
+<p>查看<code>cgroup</code>是<code>bank</code>下有哪些进程在执行。</p>
+<p>查看进程的相关信息，下面路径下的文件存储了进程相关的各种信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /proc/[pid]</span><br></pre></td></tr></table></figure>
+
+<h2 id="IO"><a href="#IO" class="headerlink" title="IO"></a>IO</h2><h3 id="系统指令-1"><a href="#系统指令-1" class="headerlink" title="系统指令"></a>系统指令</h3><h4 id="iotop"><a href="#iotop" class="headerlink" title="iotop"></a>iotop</h4><p>TID 线程id<br>PRIO IO优先级<br> <br>ionice 调整IO优先级<br>idel<br>best-effort：最佳效果<br>rt 		：实时</p>
+<h4 id="iostat"><a href="#iostat" class="headerlink" title="iostat"></a>iostat</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iostat -x 1 </span><br></pre></td></tr></table></figure>
+<p><img src="/linux%E5%86%85%E6%A0%B8.resources/iostat.png" alt="iostat"></p>
+<p>关注iowait指IO等待消耗的cpu，越小越好</p>
+<ul>
+<li><code>avgrq-sz</code> IO请求平均大小, 比较大的情况下, 顺序读写比较多</li>
+<li><code>avgqu-sz</code> IO请求队列长度, 如果比较大, 表示当前IO请求比较多</li>
+<li><code>await</code> IO等待时间</li>
+<li><code>%util</code> 评估IO负载</li>
+</ul>
+<p>一般看<code>%util</code>的值，如果比较高，说明IO负载较高，但是如果使用了raid或ssd，这个值可能不准，因为ssd的底层原理和raid类似，都是连接多块小硬盘，组合成一块大的硬盘，在读写时多块小硬盘同时读写，但是这时<code>%util</code>统计的是一块硬盘的值，因此，如果<code>%util</code>的值到了100%，也不一定是IO负载拉满了。</p>
+<h4 id="strace"><a href="#strace" class="headerlink" title="strace"></a>strace</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strace -tt -p [pid]</span><br></pre></td></tr></table></figure>
+<p>查看指定进程的系统调用。</p>
+<h4 id="lsof"><a href="#lsof" class="headerlink" title="lsof"></a>lsof</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># lsof -p 查看指定进程的IO情况,下面指令中的 $$ 表示查看当前bash的进程</span></span><br><span class="line"><span class="comment"># 第一个 $ 是取变量的值,第二个 $ 是指当前的bash</span></span><br><span class="line">lsof -p $$</span><br></pre></td></tr></table></figure>
+<p>执行结果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /data/home]<span class="comment"># lsof -p $$</span></span><br><span class="line">COMMAND   PID USER   FD   TYPE             DEVICE  SIZE/OFF       NODE NAME</span><br><span class="line">bash    23095 root  cwd    DIR             253,17      4096    6029314 /data/home/bankren</span><br><span class="line">bash    23095 root  rtd    DIR              253,1      4096          2 /</span><br><span class="line">bash    23095 root  txt    REG              253,1    922792     526169 /usr/bin/bash</span><br><span class="line">bash    23095 root  mem    REG              253,1 106176928     416765 /usr/lib/locale/locale-archive</span><br><span class="line">bash    23095 root  mem    REG              253,1   2156344     412728 /usr/lib64/libc-2.17.so</span><br><span class="line">bash    23095 root  mem    REG              253,1     19248     416908 /usr/lib64/libdl-2.17.so</span><br><span class="line">bash    23095 root  mem    REG              253,1    174576     413623 /usr/lib64/libtinfo.so.5.9</span><br><span class="line">bash    23095 root  mem    REG              253,1     15480     413373 /usr/lib64/libonion_security.so.1.0.19</span><br><span class="line">bash    23095 root  mem    REG              253,1     16697     403808 /usr/lib64/libonion_block_security.so.1.0.7</span><br><span class="line">bash    23095 root  mem    REG              253,1    163312     412076 /usr/lib64/ld-2.17.so</span><br><span class="line">bash    23095 root  mem    REG              253,1    217032     542309 /var/db/nscd/passwd</span><br><span class="line">bash    23095 root  mem    REG              253,1     26970     413427 /usr/lib64/gconv/gconv-modules.cache</span><br><span class="line">bash    23095 root    0u   CHR              136,0       0t0          3 /dev/pts/0</span><br><span class="line">bash    23095 root    1u   CHR              136,0       0t0          3 /dev/pts/0</span><br><span class="line">bash    23095 root    2u   CHR              136,0       0t0          3 /dev/pts/0</span><br><span class="line">bash    23095 root    3u  unix 0xffff8883c8225580       0t0 1009536501 socket</span><br><span class="line">bash    23095 root  255u   CHR              136,0       0t0          3 /dev/pts/0</span><br></pre></td></tr></table></figure>
+<ul>
+<li>COMMAND：进程的名称。</li>
+<li>PID：进程的进程ID。</li>
+<li>USER：进程的用户名称。</li>
+<li>FD：文件描述符，表示文件的打开方式。常见的值包括：<ul>
+<li>cwd：当前工作目录。</li>
+<li>txt：进程的可执行文件。</li>
+<li>mem：进程的内存映像。</li>
+<li>REG：普通文件。</li>
+<li>DIR：目录。</li>
+<li>PIPE：命名管道。</li>
+<li>unix：UNIX域套接字。</li>
+<li>IPv4：IPv4套接字。</li>
+<li>IPv6：IPv6套接字。</li>
+</ul>
+</li>
+<li>TYPE：文件类型，表示文件的具体类型。常见的值包括：<ul>
+<li>REG：普通文件。</li>
+<li>DIR：目录。</li>
+<li>CHR：字符设备。</li>
+<li>BLK：块设备。</li>
+<li>FIFO：命名管道。</li>
+<li>SOCK：套接字。</li>
+</ul>
+</li>
+<li>DEVICE：设备号，表示文件所在的设备。</li>
+<li>SIZE&#x2F;OFF：文件大小或偏移量。</li>
+<li>NODE：文件的节点号。</li>
+<li>NAME：文件的路径和名称。</li>
+</ul>
+<h4 id="stat"><a href="#stat" class="headerlink" title="stat"></a>stat</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">stat</span> [file_path]</span><br></pre></td></tr></table></figure>
+
+<h4 id="open"><a href="#open" class="headerlink" title="open"></a>open</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">man 2 open</span><br></pre></td></tr></table></figure>
+
+<p>直接调用open不加参数就是一般IO, 都会经过page cache来访问磁盘</p>
+<ul>
+<li><code>O_SYNC</code> 同步等待内存写道磁盘再返回</li>
+<li><code>O_DERECT</code> 直接IO, 不经过page cache</li>
+<li><code>O_ASYNC</code> 异步读取, 信号驱动，如果使用需要注册信号处理函数，实现异步</li>
+<li><code>O_DSYNC</code> 只同步文件数据（内容）, 不同步元数据（属性信息）</li>
+<li><code>O_NOATIME</code> 不记录文件访问时间<br>对于O_NOATIME，当读取文件时为了记录文件的访问时间，其实也是有写操作的，可以通过<code>stat [file_path]</code>进行查看，如果读操作十分频繁可以通过这个选项来提高性能，不进行隐藏的写操作。不记录文件访问时间。</li>
+</ul>
+<p>write-through &amp; sync IO    : write-through &#x3D; sync IO<br>write-back 写回, 内核把内存数据写到硬盘</p>
+<h4 id="sync"><a href="#sync" class="headerlink" title="sync"></a>sync</h4><p><code>sync</code>全局同步，触发全局的buf&#x2F;cache中文件的写回;<br><code>fsync &lt;fd&gt;</code> 只针对某个文件同步，写回;<br><code>fdatasync</code> 只同步数据内容，写回;<br>文件的存储分成两部分，1. 文件实际数据；2. 文件元信息，如属性信息等。对于<code>fdatasync</code>就是只同步第一部分的文件实际数据，而不同步属性信息；</p>
+<h4 id="mount"><a href="#mount" class="headerlink" title="mount"></a>mount</h4><p><code>mount</code>命令可以用于查看当前系统中已经挂载的文件系统列表。如果不指定任何参数，mount命令会列出当前系统中已经挂载的所有文件系统。</p>
+<p>上面针对某个文件或者某些文件的设置，都可以通过<code>mount</code>指令设置在整个磁盘上所有文件的读写特性，如：</p>
+<ul>
+<li><code>noatime</code> 挂载的时候设置不写atime </li>
+<li><code>ro</code> 只读 </li>
+<li><code>Sync</code> 同步挂载</li>
+</ul>
+<h3 id="linux-IO体系结构"><a href="#linux-IO体系结构" class="headerlink" title="linux IO体系结构"></a>linux IO体系结构</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/filesystems </span><br></pre></td></tr></table></figure>
+<p>查看支持的文件系统。</p>
+<h4 id="ext4文件系统"><a href="#ext4文件系统" class="headerlink" title="ext4文件系统"></a>ext4文件系统</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dumpe2fs /dev/vba1</span><br></pre></td></tr></table></figure>
+<p>查看文件系统指定分区等属性，其中<code>/dev/vba1</code>是文件系统分区，可以通过<code>mount</code>指令查看。<br>dumpe2fs执行结果：<br><img src="/linux%E5%86%85%E6%A0%B8.resources/dumpe2fs.png" alt="dumpe2fs"></p>
+<p>这些信息存在分区的第一个块里, superblock, 其他的group也能会存储superblock的backup但不是每个group中都有。<br>分区分为很多个block group, 原因如下：</p>
+<ol>
+<li>同一个文件尽量存在相同的block里面，提高局部性，减少磁盘寻址时间；</li>
+<li>方便动态扩充；</li>
+<li>减少了磁盘碎片的产生；</li>
+</ol>
+<p>其中<code>jurnal</code>是日志信息，记录操作过程, 提高文件系统的检测速度, 只扫描日志文件即可，不必将全部的<code>inode</code>和<code>block</code>全部扫描一遍，并不保证文件不丢失, 只保证inode与data一致。</p>
+<p>文件系统的结构如下：<br><img src="/linux%E5%86%85%E6%A0%B8.resources/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%BB%93%E6%9E%84.png" alt="文件系统结构"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看系统中inode的使用情况</span></span><br><span class="line"><span class="built_in">df</span> -i</span><br><span class="line"><span class="comment"># 查看系统中block的使用情况</span></span><br><span class="line"><span class="built_in">df</span></span><br></pre></td></tr></table></figure>
+<p>执行结果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /data/home]<span class="comment"># df -i</span></span><br><span class="line">Filesystem       Inodes  IUsed    IFree IUse% Mounted on</span><br><span class="line">devtmpfs        2011316   1460  2009856    1% /dev</span><br><span class="line">tmpfs           2015628      3  2015625    1% /dev/shm</span><br><span class="line">tmpfs           2015628   1298  2014330    1% /run</span><br><span class="line">tmpfs           2015628     17  2015611    1% /sys/fs/cgroup</span><br><span class="line">/dev/vda1       6553600 181394  6372206    3% /</span><br><span class="line">/dev/vdb1      13107200   4618 13102582    1% /data</span><br><span class="line">[root@VM-236-124-centos /data/home]<span class="comment"># df</span></span><br><span class="line">Filesystem     1K-blocks    Used Available Use% Mounted on</span><br><span class="line">devtmpfs         8045264       0   8045264   0% /dev</span><br><span class="line">tmpfs            8062512   10244   8052268   1% /dev/shm</span><br><span class="line">tmpfs            8062512  280104   7782408   4% /run</span><br><span class="line">tmpfs            8062512       0   8062512   0% /sys/fs/cgroup</span><br><span class="line">/dev/vda1      103081200 8533824  90253172   9% /</span><br><span class="line">/dev/vdb1      206291944  292420 195497432   1% /data</span><br></pre></td></tr></table></figure>
+
+<p>inode和block的结构如下：<br><img src="/linux%E5%86%85%E6%A0%B8.resources/ext4%E7%9A%84inode%E7%BB%93%E6%9E%84.png" alt="ext4的inode结构"><br>我们来看下linux内核的<a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.4.119/source/fs/ext4/ext4.h">源码</a>，（5.4.119版本）</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ext4_inode</span> &#123;</span></span><br><span class="line">	__le16	i_mode;		<span class="comment">/* File mode */</span></span><br><span class="line">	__le16	i_uid;		<span class="comment">/* Low 16 bits of Owner Uid */</span></span><br><span class="line">	__le32	i_size_lo;	<span class="comment">/* Size in bytes */</span></span><br><span class="line">	__le32	i_atime;	<span class="comment">/* Access time */</span></span><br><span class="line">	__le32	i_ctime;	<span class="comment">/* Inode Change time */</span></span><br><span class="line">	__le32	i_mtime;	<span class="comment">/* Modification time */</span></span><br><span class="line">	__le32	i_dtime;	<span class="comment">/* Deletion Time */</span></span><br><span class="line">	__le16	i_gid;		<span class="comment">/* Low 16 bits of Group Id */</span></span><br><span class="line">	__le16	i_links_count;	<span class="comment">/* Links count */</span></span><br><span class="line">	__le32	i_blocks_lo;	<span class="comment">/* Blocks count */</span></span><br><span class="line">	__le32	i_flags;	<span class="comment">/* File flags */</span></span><br><span class="line">	<span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">			__le32  l_i_version;</span><br><span class="line">		&#125; linux1;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">			__u32  h_i_translator;</span><br><span class="line">		&#125; hurd1;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">			__u32  m_i_reserved1;</span><br><span class="line">		&#125; masix1;</span><br><span class="line">	&#125; osd1;				<span class="comment">/* OS dependent 1 */</span></span><br><span class="line">	__le32	i_block[EXT4_N_BLOCKS];<span class="comment">/* Pointers to blocks */</span></span><br><span class="line">    ....</span><br></pre></td></tr></table></figure>
+<p>开始的几个字段存储了inode的元信息，我们来看<code>__le32	i_block[EXT4_N_BLOCKS];</code>，对于<code>EXT4_N_BLOCKS的</code>定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Constants relative to the data blocks</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	EXT4_NDIR_BLOCKS		12</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	EXT4_IND_BLOCK			EXT4_NDIR_BLOCKS</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	EXT4_DIND_BLOCK			(EXT4_IND_BLOCK + 1)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	EXT4_TIND_BLOCK			(EXT4_DIND_BLOCK + 1)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	EXT4_N_BLOCKS			(EXT4_TIND_BLOCK + 1)</span></span><br></pre></td></tr></table></figure>
+<p>EXT4_N_BLOCKS &#x3D; 15，其中前12个是直接指针，直接指向block块，第13是一级指针，第14是二级指针，第15是三级指针，以一级指针为例，就是这个指针指向的块（4kb）被全部划分成了指针（4字节），每个指针简介指向一个block，由block存储实际的数据。</p>
+<p>一个指针是4字节：</p>
+<ul>
+<li>一级：1k * 4k	                &#x3D;&gt;    4M</li>
+<li>二级：1k * 1k * 4k	        &#x3D;&gt;    4G</li>
+<li>三级：1 k* 1k * 1k * 4k	    &#x3D;&gt;    4T</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 修改文件的操作权限,通过 + 实现添加不配置</span></span><br><span class="line">chattr</span><br><span class="line">- a:文件只能追加</span><br><span class="line">- i:文件不可修改、不可删除</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看文件的操作权限</span></span><br><span class="line">lsattr</span><br></pre></td></tr></table></figure>
+
+<h4 id="xfs文件系统"><a href="#xfs文件系统" class="headerlink" title="xfs文件系统"></a>xfs文件系统</h4><h3 id="linux-IO调度"><a href="#linux-IO调度" class="headerlink" title="linux IO调度"></a>linux IO调度</h3><p>查看系统挂载的全部磁盘：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 系统挂载的全部磁盘</span></span><br><span class="line"><span class="built_in">cd</span> /sys/class/block</span><br><span class="line">[root@VM-236-124-centos /sys/class/block]<span class="comment"># ls</span></span><br><span class="line">loop0  loop3  loop6  nbd1   nbd12  nbd15  nbd4  nbd7  ram0   ram11  ram14  ram3  ram6  ram9  vda1</span><br><span class="line">loop1  loop4  loop7  nbd10  nbd13  nbd2   nbd5  nbd8  ram1   ram12  ram15  ram4  ram7  sr0   vdb</span><br><span class="line">loop2  loop5  nbd0   nbd11  nbd14  nbd3   nbd6  nbd9  ram10  ram13  ram2   ram5  ram8  vda   vdb1</span><br></pre></td></tr></table></figure>
+
+<p>选取一个磁盘后，进入目录<code>queue</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /sys/class/block/vda/queue]<span class="comment"># ls</span></span><br><span class="line">add_random            fua                 max_discard_segments    nbd_ignore_blksize_set  rotational          write_same_max_bytes</span><br><span class="line">chunk_sectors         hw_sector_size      max_hw_sectors_kb       nomerges                rq_affinity         write_zeroes_max_bytes</span><br><span class="line">dax                   io_poll             max_integrity_segments  nr_requests             scheduler           zoned</span><br><span class="line">discard_granularity   io_poll_delay       max_sectors_kb          nr_zones                wbt_class_conf</span><br><span class="line">discard_max_bytes     iosched             max_segments            optimal_io_size         wbt_class_lat_usec</span><br><span class="line">discard_max_hw_bytes  iostats             max_segment_size        physical_block_size     wbt_lat_usec</span><br><span class="line">discard_zeroes_data   logical_block_size  minimum_io_size         read_ahead_kb           write_cache</span><br><span class="line">````</span><br><span class="line">查看支持的调度策略，即目前使用的策略：</span><br><span class="line">```bash</span><br><span class="line">[root@VM-236-124-centos /sys/class/block/vda/queue]<span class="comment"># cat scheduler</span></span><br><span class="line">[mq-deadline] kyber bfq none</span><br></pre></td></tr></table></figure>
+<p>修改调度策略的参数，这个路径下的文件会根据调度策略的不同自动更新：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /sys/class/block/vda/queue]<span class="comment"># cd iosched</span></span><br><span class="line">[root@VM-236-124-centos /sys/class/block/vda/queue/iosched]<span class="comment"># ls</span></span><br><span class="line">fifo_batch  front_merges  read_expire  write_expire  writes_starved</span><br></pre></td></tr></table></figure>
+
+
+<p>下面来讨论一下几种IO调度策略：（下面的调度策略都是对于机械硬盘来说的，对于SSD有无调度策略对性能几乎没有影响）</p>
+<h4 id="CFQ"><a href="#CFQ" class="headerlink" title="CFQ"></a>CFQ</h4><p><img src="/linux%E5%86%85%E6%A0%B8.resources/cfq.png" alt="cfq"><br>完全公平队列，公平是针对进程来说的，也就是让进程公平的占用IO资源。<br>IO资源有两个单位：</p>
+<ul>
+<li>数据读写带宽，单位时间内的数据读写数据量。</li>
+<li>数据读写的IOPS，单位时间内的读写次数。</li>
+</ul>
+<p>由于顺序读写和随机读写的性能差异，使用上面两个单位去评测进程对IO资源的占用都不是很准确，所以对进程占用IO的时间进行调度才是相对比较公平的，也就是说CFQ给进程尽量分配相同大小的块设备时间片。<br>进程IO优先级：</p>
+<ul>
+<li>RT：实时（Real Time）</li>
+<li>BE：最佳效果（Best Try）</li>
+<li>IDLE：闲置（idle）</li>
+</ul>
+<h6 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h6><p>首先<code>cfq</code>通过<code>cfq_group</code>，实现cgroup的资源隔离，cfq使用红黑树来维护多个cfg_group，使用每个group的的IO占用时间作为key，来维护红黑树，对于每个group的资源限制，通过控制不同group的IO占用时间key的增长速率来实现，<code>举个例子：A占用IO资源33%，B占用IO资源66%，则此时A再红黑树中key的增长速率就是B的两倍，即若A、B都占用了1s的IO时间，则在红黑树中A得key记2，B记1，这样就实现了资源的控制</code>。</p>
+<p>每个<code>cfq_group</code>下都有7个<code>service tree</code>，其源码结构如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">cfq_rb_root</span> <span class="title">service_trees</span>[2][3];</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">cfq_rb_root</span> <span class="title">service_tree_idle</span>;</span></span><br></pre></td></tr></table></figure>
+<p>对于<code>service_trees</code>，是一个二维数组，维护了<code>RT</code>、<code>BE</code>两个优先级队列，其中每个维度内又针对<code>SYNC</code>、<code>SYNC_NOIDLE</code>、<code>ASYNC</code>三种不同类型的请求，维护了三颗红黑树。<br>对于<code>service_tree_idle</code>，是用来给<code>IDLE</code>类型的请求进行排队用的红黑树。</p>
+<ul>
+<li><code>SYNC</code>：同步请求类型，表示IO请求需要等待设备完成之后才能返回</li>
+<li><code>SYNC_NOIDLE</code>：同步非空闲请求类型，表示IO请求需要等待设备完成之后才能返回，并且不允许设备在空闲时进行IO操作</li>
+<li><code>ASYNC</code>：异步请求类型，表示IO请求可以立即返回，而不需要等待设备完成</li>
+<li><code>IDLE</code>：空闲请求类型，表示IO请求只有在设备处于空闲状态时才会执行</li>
+</ul>
+<p>入队策略：</p>
+<ul>
+<li>如果请求是同步顺序请求，就入队SYNC队列；</li>
+<li>如果请求是同步随机请求，则入队SYNC_NOIDLE队列，以判断下一个请求是否是顺序请求；</li>
+<li>所有的异步写操作请求将入队ASYNC的service tree，并且针对这个队列没有空转等待机制；</li>
+</ul>
+<p>对于三种优先级类型的service tree，根据类型的优先级做选择进行调度，其中<code>RT &gt; BE &gt; IDEL</code>，也就是说RT里有，就会一直处理RT，RT没了再处理BE。每个service tree都是一个元素是<code>cfq_queue</code>的红黑树，每个<code>cfq_queue</code>对应一个进程的全部IO操作，其key是这个队列<code>cfq_queue</code>的IO服务时间，通过红黑树找到IO服务时间占用最短的队列进行服务，以此来保证“公平”。</p>
+<p>选取好待服务的<code>cfq_queue</code>队列后，接下来处理这个队列中的IO请求。cfq会将队列中的每一个请求分别加入fifo和安访问扇区作为key的红黑树，默认从红黑树中取请求进行处理，当请求的延时时间达到deadline时，就从红黑树中取等待时间最长的进行处理，以保证请求不被饿死。</p>
+<h6 id="参数调整"><a href="#参数调整" class="headerlink" title="参数调整"></a>参数调整</h6><table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>功能</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>back_seek_max</td>
+<td>磁头可以向后寻址的最大范围，默认值为16M</td>
+<td></td>
+</tr>
+<tr>
+<td>back_seek_penalty</td>
+<td>向后寻址的惩罚系数。这个值是跟向前寻址进行比较的</td>
+<td></td>
+</tr>
+<tr>
+<td>fifo_expire_async</td>
+<td>设置异步请求的超时时间</td>
+<td></td>
+</tr>
+<tr>
+<td>fifo_expire_sync</td>
+<td>设置同步请求的超时时间</td>
+<td></td>
+</tr>
+<tr>
+<td>slice_idle</td>
+<td>等待时间,让cfq在切换cfq_queue或service tree的时候等待一段时间，目的是提高机械硬盘的吞吐量</td>
+<td></td>
+</tr>
+<tr>
+<td>group_idle</td>
+<td>当cfq要切换cfq_group的时候的等待一段时间</td>
+<td></td>
+</tr>
+<tr>
+<td>low_latency</td>
+<td>开启或关闭cfq的低延时（low latency）模式的开关</td>
+<td></td>
+</tr>
+<tr>
+<td>target_latency</td>
+<td>low_latency的值为开启状态时，cfq将根据这个值重新计算每个进程分配的IO时间片长度</td>
+<td></td>
+</tr>
+<tr>
+<td>quantum</td>
+<td>当一个cfq_queue队列被调度处理时，它可以被分配的处理总时间是通过这个值来作为一个计算参数指定的公式：time_slice &#x3D; slice_sync + (slice_sync&#x2F;5 * (4 - prio))</td>
+<td>对同步请求有效</td>
+</tr>
+<tr>
+<td>slice_async</td>
+<td>同上</td>
+<td>对异步请求有效</td>
+</tr>
+<tr>
+<td>slice_async_rq</td>
+<td>在一个slice的时间范围内，一个队列最多可以处理的异步请求个数</td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="DEADLINE"><a href="#DEADLINE" class="headerlink" title="DEADLINE"></a>DEADLINE</h4><h4 id="BFQ"><a href="#BFQ" class="headerlink" title="BFQ"></a>BFQ</h4><h4 id="kyber"><a href="#kyber" class="headerlink" title="kyber"></a>kyber</h4><h3 id="资源隔离-1"><a href="#资源隔离-1" class="headerlink" title="资源隔离"></a>资源隔离</h3><p>设置IO资源隔离的路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /sys/fs/cgroup/blkio</span><br><span class="line"><span class="built_in">mkdir</span> bankren</span><br><span class="line"><span class="built_in">cd</span> bankren</span><br></pre></td></tr></table></figure>
+<p>配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/blkio/bankren]<span class="comment"># ls</span></span><br><span class="line">blkio.bfq.ioprio_class                blkio.latency                              blkio.throttle.stat</span><br><span class="line">blkio.bfq.io_service_bytes            blkio.reset_stats                          blkio.throttle.write_bps_device</span><br><span class="line">blkio.bfq.io_service_bytes_recursive  blkio.throttle.buffered_write_bps          blkio.throttle.write_iops_device</span><br><span class="line">blkio.bfq.io_serviced                 blkio.throttle.io_service_bytes            cgroup.clone_children</span><br><span class="line">blkio.bfq.io_serviced_recursive       blkio.throttle.io_service_bytes_recursive  cgroup.priority</span><br><span class="line">blkio.bfq.weight                      blkio.throttle.io_serviced                 cgroup.procs</span><br><span class="line">blkio.bfq.weight_device               blkio.throttle.io_serviced_recursive       io.pressure</span><br><span class="line">blkio.cost.stat                       blkio.throttle.read_bps_device             notify_on_release</span><br><span class="line">blkio.cost.weight                     blkio.throttle.read_iops_device            tasks</span><br><span class="line">blkio.diskstats                       blkio.throttle.readwrite_bps_device</span><br><span class="line">blkio.diskstats_recursive             blkio.throttle.readwrite_iops_device</span><br><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/blkio/bankren]<span class="comment"># </span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>blkio.throttle.read_bps_device：用于限制块设备IO读取速率的字节数&#x2F;秒。</li>
+<li>blkio.throttle.read_iops_device：用于限制块设备IO读取速率的IOPS（每秒IO操作数）。</li>
+<li>blkio.throttle.write_bps_device：用于限制块设备IO写入速率的字节数&#x2F;秒。</li>
+<li>blkio.throttle.write_iops_device：用于限制块设备IO写入速率的IOPS（每秒IO操作数）。</li>
+</ul>
+<p>实验：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos ~]<span class="comment"># dd if=/dev/zero of=/home/testfile bs=1M count=1024</span></span><br><span class="line">1024+0 records <span class="keyword">in</span></span><br><span class="line">1024+0 records out</span><br><span class="line">1073741824 bytes (1.1 GB) copied, 0.523492 s, 2.1 GB/s</span><br></pre></td></tr></table></figure>
+<p>先来看一下，不做限制的写入，写入1GB的数据到文件，可以看到写入数据很快，这也证明了系统缓存的存在，是先把文件写入内存，然后再由内核异步写入磁盘。<br>下面来配置<code>cgroup</code>组；<br>首先查看一下设备编号：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看系统中的block</span></span><br><span class="line"><span class="built_in">df</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看对应block的设备号</span></span><br><span class="line"><span class="built_in">ls</span> -l [block]</span><br><span class="line"><span class="comment"># 主设备号：使用那个驱动</span></span><br><span class="line"><span class="comment"># 从设备号：使用这个驱动下的第几个设备</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/blkio/bankren]<span class="comment"># df</span></span><br><span class="line">Filesystem     1K-blocks    Used Available Use% Mounted on</span><br><span class="line">devtmpfs         8045264       0   8045264   0% /dev</span><br><span class="line">tmpfs            8062512   10244   8052268   1% /dev/shm</span><br><span class="line">tmpfs            8062512  271912   7790600   4% /run</span><br><span class="line">tmpfs            8062512       0   8062512   0% /sys/fs/cgroup</span><br><span class="line">/dev/vda1      103081200 9582476  89204520  10% /</span><br><span class="line">/dev/vdb1      206291944  292420 195497432   1% /data</span><br><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/blkio/bankren]<span class="comment"># ls -l /dev/vda1</span></span><br><span class="line">brw-rw---- 1 root disk 253, 1 Sep  6  2022 /dev/vda1</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@VM-236-124-centos /sys/fs/cgroup/blkio/bankren]<span class="comment"># echo $[10*1024*1024]</span></span><br><span class="line">10485760</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+<p>快速计算：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> $[1+1]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 清除文件系统缓存</span></span><br><span class="line"><span class="built_in">echo</span> 3 &gt; /proc/sys/vm/drop_caches</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h2><h2 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/30/%E5%9C%A8%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E8%BE%93%E5%85%A5%E4%B8%80%E4%B8%AAurl,%E4%BC%9A%E7%BB%8F%E5%8E%86%E5%93%AA%E4%BA%9B%E8%BF%87%E7%A8%8B/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#linux%E5%86%85%E6%A0%B8"><span class="nav-number">1.</span> <span class="nav-text">linux内核</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU"><span class="nav-number">1.1.</span> <span class="nav-text">CPU</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E6%8C%87%E4%BB%A4"><span class="nav-number">1.1.1.</span> <span class="nav-text">系统指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#top"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">top</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sar"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">sar</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mpstat"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">mpstat</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#perf"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">perf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#pidstat"><span class="nav-number">1.1.1.5.</span> <span class="nav-text">pidstat</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#cat-x2F-proc-x2F-cpuinfo"><span class="nav-number">1.1.1.6.</span> <span class="nav-text">cat &#x2F;proc&#x2F;cpuinfo</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NUMA"><span class="nav-number">1.1.2.</span> <span class="nav-text">NUMA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD"><span class="nav-number">1.1.3.</span> <span class="nav-text">中断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-number">1.1.4.</span> <span class="nav-text">调度器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E9%9A%94%E7%A6%BB"><span class="nav-number">1.1.5.</span> <span class="nav-text">资源隔离</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO"><span class="nav-number">1.2.</span> <span class="nav-text">IO</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E6%8C%87%E4%BB%A4-1"><span class="nav-number">1.2.1.</span> <span class="nav-text">系统指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#iotop"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">iotop</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iostat"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">iostat</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#strace"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">strace</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lsof"><span class="nav-number">1.2.1.4.</span> <span class="nav-text">lsof</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#stat"><span class="nav-number">1.2.1.5.</span> <span class="nav-text">stat</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#open"><span class="nav-number">1.2.1.6.</span> <span class="nav-text">open</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sync"><span class="nav-number">1.2.1.7.</span> <span class="nav-text">sync</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mount"><span class="nav-number">1.2.1.8.</span> <span class="nav-text">mount</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linux-IO%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">1.2.2.</span> <span class="nav-text">linux IO体系结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ext4%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">ext4文件系统</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#xfs%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">xfs文件系统</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linux-IO%E8%B0%83%E5%BA%A6"><span class="nav-number">1.2.3.</span> <span class="nav-text">linux IO调度</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CFQ"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">CFQ</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.2.3.1.0.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E8%B0%83%E6%95%B4"><span class="nav-number">1.2.3.1.0.2.</span> <span class="nav-text">参数调整</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DEADLINE"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">DEADLINE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#BFQ"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">BFQ</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#kyber"><span class="nav-number">1.2.3.4.</span> <span class="nav-text">kyber</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E9%9A%94%E7%A6%BB-1"><span class="nav-number">1.2.4.</span> <span class="nav-text">资源隔离</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98"><span class="nav-number">1.3.</span> <span class="nav-text">内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C"><span class="nav-number">1.4.</span> <span class="nav-text">网络</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">bank</p>
+  <div class="site-description" itemprop="description">行至水穷处,坐看云起时</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">bank</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
