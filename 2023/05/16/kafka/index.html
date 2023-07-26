@@ -1,298 +1,166 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 6.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
-  </script>
-
-  <meta property="og:type" content="article">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Kafka | bank blog</title><meta name="author" content="bank"><meta name="copyright" content="bank"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta property="og:type" content="article">
 <meta property="og:title" content="Kafka">
 <meta property="og:url" content="http://example.com/2023/05/16/kafka/index.html">
 <meta property="og:site_name" content="bank blog">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/kafka.resources/65F5CE49-53BD-4563-9A0E-5430A7EA3EED.png">
-<meta property="og:image" content="http://example.com/kafka.resources/1EE44434-732C-4FA0-8951-41FECB372191.png">
-<meta property="og:image" content="http://example.com/kafka.resources/62939383-E857-4D12-B203-405C1A8CBE45.png">
-<meta property="og:image" content="http://example.com/kafka.resources/89EA7722-5DA0-4364-804F-F97CEBF57BF7.png">
-<meta property="og:image" content="http://example.com/kafka.resources/DEF12B67-A549-4FB6-B95B-9B9948E08710.png">
-<meta property="og:image" content="http://example.com/kafka.resources/35C011D3-6775-49FD-8F64-7A031E994E36.png">
-<meta property="og:image" content="http://example.com/kafka.resources/07397027-2DC6-48F8-A708-8B1B291868FB.png">
-<meta property="og:image" content="http://example.com/kafka.resources/33209826-17BB-44C5-9124-3F58191A266E.png">
-<meta property="og:image" content="http://example.com/kafka.resources/61851D2D-5109-4F54-9FB8-67C13D80CC4B.png">
-<meta property="og:image" content="http://example.com/kafka.resources/8E10AD43-32FA-410A-B62C-116E8D61704F.png">
-<meta property="og:image" content="http://example.com/kafka.resources/7095C427-8D2C-4060-8D67-019B569FFB79.png">
-<meta property="og:image" content="http://example.com/kafka.resources/BD49344C-CF8B-43C9-A62B-5D47532C6BCD.png">
-<meta property="og:image" content="http://example.com/kafka.resources/9C0EFAF5-1667-46B5-AAF8-BC5422B2E4C1.png">
-<meta property="og:image" content="http://example.com/kafka.resources/6B4D70C6-217B-4DE6-AC36-FFA739397F53.png">
-<meta property="og:image" content="http://example.com/kafka.resources/B6DB4058-13AC-4838-AA00-7CA3EE24242D.png">
-<meta property="og:image" content="http://example.com/kafka.resources/321D722D-59E8-4501-8B00-B5DAB07D2F75.png">
-<meta property="og:image" content="http://example.com/kafka.resources/C3D9D158-1B8C-4F01-803E-071D605DB043.png">
-<meta property="og:image" content="http://example.com/kafka.resources/02137ECF-4A0F-49A9-A526-3BDC8DD5B2A4.png">
-<meta property="og:image" content="http://example.com/kafka.resources/9DD5CB22-5068-4885-9CF8-813EEB4622FE.png">
-<meta property="og:image" content="http://example.com/kafka.resources/C8194AA6-6EDF-40F0-A96B-F1A89795E1B7.png">
-<meta property="og:image" content="http://example.com/kafka.resources/EFA5A3E9-2D06-43EC-82F5-2FD25B056555.png">
-<meta property="og:image" content="http://example.com/kafka.resources/AAF4E802-F10B-494F-871A-4E3E521AF8C5.png">
-<meta property="og:image" content="http://example.com/kafka.resources/D9796569-7EEE-4F60-948F-7D8A26C606B8.png">
-<meta property="og:image" content="http://example.com/kafka.resources/92055585-0E6B-452C-A0F1-22FCE1386C8D.png">
-<meta property="og:image" content="http://example.com/kafka.resources/77991428-5C96-4875-B7CB-0E16453B36CD.png">
-<meta property="og:image" content="http://example.com/kafka.resources/C4218845-D5E7-4861-A998-730756FF24CD.png">
-<meta property="og:image" content="http://example.com/kafka.resources/A3F22BB8-E1F3-4FAB-9858-7D5D457FC8D2.png">
-<meta property="og:image" content="http://example.com/kafka.resources/2BCFFB4D-9E2E-49EA-A039-B7785773BCF0.png">
-<meta property="og:image" content="http://example.com/kafka.resources/1F30D057-DEEC-42A0-B03E-7DF305B7C78C.png">
-<meta property="og:image" content="http://example.com/kafka.resources/C14320A5-18CC-421E-8F99-AB61CC41E1FB.png">
-<meta property="og:image" content="http://example.com/kafka.resources/F80F9D45-F4FF-46AA-8C48-73FB181A1268.png">
-<meta property="og:image" content="http://example.com/kafka.resources/566BE485-52B4-43CE-95C9-7F7F29214D01.png">
-<meta property="og:image" content="http://example.com/kafka.resources/CFBC5751-0477-4964-80BF-CA72539C7FA7.png">
-<meta property="og:image" content="http://example.com/kafka.resources/BD83528F-D003-4D65-9C3A-A475DEB57D9E.png">
-<meta property="og:image" content="http://example.com/kafka.resources/653848E0-D12C-4DF9-B755-9D0E7AC3999D.png">
-<meta property="og:image" content="http://example.com/kafka.resources/43A84336-C52A-4E08-8039-8697EA0CC4C5.png">
-<meta property="og:image" content="http://example.com/kafka.resources/4A6C37DF-97C1-4172-AC43-733A800BD978.png">
-<meta property="og:image" content="http://example.com/kafka.resources/C98A9625-7D20-4179-9191-900688BE2E74.png">
-<meta property="og:image" content="http://example.com/kafka.resources/C4C0D263-557D-4FF0-8601-F2C78FFE722C.png">
-<meta property="og:image" content="http://example.com/kafka.resources/EB57891F-1BFF-4515-9827-7F8EC2D9C843.png">
-<meta property="og:image" content="http://example.com/kafka.resources/E4665FD7-199C-4FF6-BDB3-B5E87015F33C.png">
-<meta property="og:image" content="http://example.com/kafka.resources/91FEB7ED-21C6-412E-A7A8-A50146F9948E.png">
-<meta property="og:image" content="http://example.com/kafka.resources/60ED3748-A650-4B61-B7EF-E1E6A25A0F95.png">
-<meta property="og:image" content="http://example.com/kafka.resources/C5B6B40E-6A0B-449E-91D5-EF7C363B7269.png">
-<meta property="og:image" content="http://example.com/kafka.resources/D45E7865-2467-446A-A1EF-3128412F7159.png">
-<meta property="og:image" content="http://example.com/kafka.resources/DACFA44E-6D8B-4A38-87AA-563260FDA15E.png">
-<meta property="og:image" content="http://example.com/kafka.resources/1E883562-5F79-4D36-8CAF-22E2CA528ABB.png">
-<meta property="og:image" content="http://example.com/kafka.resources/3B731EA8-8E1C-402F-94BA-C6AC914183C7.png">
-<meta property="og:image" content="http://example.com/kafka.resources/A8C77FD7-5E51-4B28-B565-85F76E3E257F.png">
-<meta property="og:image" content="http://example.com/kafka.resources/D9052EEF-139D-44C3-BABF-DE4CE7873C23.png">
-<meta property="og:image" content="http://example.com/kafka.resources/59FFB4C0-B2F0-408B-8AF2-1155C6E2538E.png">
-<meta property="og:image" content="http://example.com/kafka.resources/597597FF-B2A4-4826-9A27-78E32CF118B0.png">
-<meta property="og:image" content="http://example.com/kafka.resources/2B9C097F-C564-4CC7-BFE1-42604091DEF5.png">
-<meta property="og:image" content="http://example.com/kafka.resources/C7B2FDB9-A503-4469-A849-E0F451B5C373.png">
-<meta property="og:image" content="http://example.com/kafka.resources/E92F897D-7DEF-4312-B0C5-7F66699B35F9.png">
-<meta property="og:image" content="http://example.com/kafka.resources/4E3CEAFF-E268-45F3-87A6-4791D92FF7F7.png">
-<meta property="og:image" content="http://example.com/kafka.resources/E1285B6B-0392-474C-9340-7A9F89BDF70A.png">
-<meta property="og:image" content="http://example.com/kafka.resources/15456D72-73D8-4E8D-8593-DC5FFE792979.png">
-<meta property="og:image" content="http://example.com/kafka.resources/D643154A-56A3-44B4-A8F2-39CFD22B1B57.png">
-<meta property="og:image" content="http://example.com/kafka.resources/947F429F-1571-42C7-BDBE-6476E1EA3582.png">
-<meta property="og:image" content="http://example.com/kafka.resources/2F552836-FFED-4E93-8FCF-A9A4169EB1F1.png">
-<meta property="og:image" content="http://example.com/kafka.resources/6D354BCE-3EC0-4EAA-81DF-F9778EB673A4.png">
-<meta property="og:image" content="http://example.com/kafka.resources/0014E621-7E9C-4C7D-A9AE-C7F388DC73B5.png">
-<meta property="og:image" content="http://example.com/kafka.resources/2A5BF6C3-68BE-4F4B-BA60-0A31FD3343D1.png">
-<meta property="og:image" content="http://example.com/kafka.resources/508B4978-EB7C-4285-A1BB-D2E0684DCF43.png">
-<meta property="og:image" content="http://example.com/kafka.resources/68BB3CF5-4C83-4F98-9297-21B58AE6A84C.png">
-<meta property="og:image" content="http://example.com/kafka.resources/1A6664F9-7522-4CE7-9E08-C49AEB8FDC7A.png">
-<meta property="og:image" content="http://example.com/kafka.resources/A5075815-B672-40EC-8E02-44EE3D3B51A9.png">
-<meta property="og:image" content="http://example.com/kafka.resources/80D1F293-4364-44CD-B943-A13771A31C61.png">
-<meta property="og:image" content="http://example.com/kafka.resources/F166D8D0-AAE0-4098-A7CF-7CC2B29C3743.png">
-<meta property="og:image" content="http://example.com/kafka.resources/23468A3A-1669-4A32-AA51-12FC056D10B8.png">
-<meta property="og:image" content="http://example.com/kafka.resources/075CDCA7-4563-486B-A107-01867E07F042.png">
-<meta property="og:image" content="http://example.com/kafka.resources/A082B6CB-0D1D-4986-8E05-7A55819820E6.png">
-<meta property="og:image" content="http://example.com/kafka.resources/7E67A6BB-4597-4BE7-B13F-A9003E3C31B9.png">
-<meta property="og:image" content="http://example.com/kafka.resources/8AEF19AF-B220-4DC5-9208-F4C4D59FDBEA.png">
-<meta property="og:image" content="http://example.com/kafka.resources/2D868310-F5BE-4277-972E-6826C50B50E8.png">
-<meta property="og:image" content="http://example.com/kafka.resources/195E0AAC-7A66-4CFE-93E3-8A0A833980A3.png">
-<meta property="og:image" content="http://example.com/kafka.resources/2BC60489-B899-49B4-BF63-C8E43F3ACA52.png">
-<meta property="og:image" content="http://example.com/kafka.resources/EBDD2262-7788-484B-94D1-493AD3559C6D.png">
-<meta property="og:image" content="http://example.com/kafka.resources/DEA1C8E0-9487-48FC-B3AE-F7154E99892B.png">
-<meta property="og:image" content="http://example.com/kafka.resources/004100B7-94A0-40C5-AF8D-9CE932AB09E9.png">
-<meta property="og:image" content="http://example.com/kafka.resources/21027BB4-8135-4D84-B461-9841E1C3A278.png">
-<meta property="og:image" content="http://example.com/kafka.resources/09682687-C2BF-4312-B392-29B3B17FC765.png">
-<meta property="og:image" content="http://example.com/kafka.resources/09828C59-9815-4F77-A732-4C7500199C7B.png">
-<meta property="og:image" content="http://example.com/kafka.resources/BE526A56-14E2-444B-AE8A-1B93DCB67B49.png">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
 <meta property="article:published_time" content="2023-05-16T12:56:38.544Z">
 <meta property="article:modified_time" content="2023-05-16T13:30:30.784Z">
 <meta property="article:author" content="bank">
 <meta property="article:tag" content="mq">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/kafka.resources/65F5CE49-53BD-4563-9A0E-5430A7EA3EED.png">
-
-<link rel="canonical" href="http://example.com/2023/05/16/kafka/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>Kafka | bank blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2023/05/16/kafka/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Kafka',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-05-16 21:30:30'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
   }
 
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
 
-</head>
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
 
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
 
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">bank blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-  </ul>
-</nav>
-
-
-
-
-</div>
-    </header>
-
-    
-  <div class="back-to-top">
-    <i class="fa fa-arrow-up"></i>
-    <span>0%</span>
-  </div>
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
   
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
   
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/05/16/kafka/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="bank">
-      <meta itemprop="description" content="行至水穷处,坐看云起时">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="bank blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          Kafka
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2023-05-16 20:56:38 / 修改时间：21:30:30" itemprop="dateCreated datePublished" datetime="2023-05-16T20:56:38+08:00">2023-05-16</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
     
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
     
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-        <meta name="referrer" content="no-referrer"/>
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="bank blog"><span class="site-name">bank blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Kafka</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-05-16T12:56:38.544Z" title="发表于 2023-05-16 20:56:38">2023-05-16</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-05-16T13:30:30.784Z" title="更新于 2023-05-16 21:30:30">2023-05-16</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/">消息队列</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Kafka"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><meta name="referrer" content="no-referrer"/>
 
 <span id="more"></span>
 <?xml version="1.0" encoding="UTF-8"?>
@@ -2602,90 +2470,7 @@
     <div><br /></div>
 </body>
 
-</html>
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/mq/" rel="tag"># mq</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2023/05/16/golang%E6%8C%87%E9%92%88/" rel="prev" title="golang指针讨论">
-      <i class="fa fa-chevron-left"></i> golang指针讨论
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/2023/05/19/golang%E5%AE%9E%E7%8E%B0%E8%B7%B3%E8%A1%A8/" rel="next" title="golang实现跳表">
-      golang实现跳表 <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">1.0.1.</span> <span class="nav-text">功能：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">1.0.2.</span> <span class="nav-text">基本概念：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">生产者</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">2.0.1.</span> <span class="nav-text">生产逻辑需要具备的步骤：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">2.0.2.</span> <span class="nav-text">生产者客户端参数配置：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">2.0.3.</span> <span class="nav-text">消息发送：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">2.0.4.</span> <span class="nav-text">分区器：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">2.0.5.</span> <span class="nav-text">拦截器：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">2.1.</span> <span class="nav-text">原理分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">2.2.</span> <span class="nav-text">重要的生产者参数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">消费者</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.1.</span> <span class="nav-text">消费逻辑需要具备的步骤：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.2.</span> <span class="nav-text">消息消费</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.3.</span> <span class="nav-text">消息提交</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">3.3.1.</span> <span class="nav-text">自动提交</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">3.3.2.</span> <span class="nav-text">手动提交</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.4.</span> <span class="nav-text">指定位移消费</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.5.</span> <span class="nav-text">再均衡</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.6.</span> <span class="nav-text">消费者拦截器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.7.</span> <span class="nav-text">多线程实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.8.</span> <span class="nav-text">重要的消费者参数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">主题与分区</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">4.1.</span> <span class="nav-text">主题相关命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">4.2.</span> <span class="nav-text">分区、副本相关内容</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">4.2.1.</span> <span class="nav-text">优先副本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">4.2.2.</span> <span class="nav-text">分区重分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">4.2.3.</span> <span class="nav-text">复制限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">4.2.4.</span> <span class="nav-text">修改副本因子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">4.2.5.</span> <span class="nav-text">性能相关</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">日志存储</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">5.1.</span> <span class="nav-text">日志文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">5.1.1.</span> <span class="nav-text">V0版本日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">5.1.2.</span> <span class="nav-text">v1版本日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">5.1.3.</span> <span class="nav-text">消息压缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">5.1.4.</span> <span class="nav-text">
+</html></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://example.com">bank</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/05/16/kafka/">http://example.com/2023/05/16/kafka/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">bank blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/mq/">mq</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/05/19/golang%E5%AE%9E%E7%8E%B0%E8%B7%B3%E8%A1%A8/" title="golang实现跳表"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">golang实现跳表</div></div></a></div><div class="next-post pull-right"><a href="/2023/05/16/golang%E6%8C%87%E9%92%88/" title="golang指针讨论"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">golang指针讨论</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">bank</div><div class="author-info__description">行至水穷处,坐看云起时</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.0.1.</span> <span class="toc-text">功能：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.0.2.</span> <span class="toc-text">基本概念：</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">生产者</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.0.1.</span> <span class="toc-text">生产逻辑需要具备的步骤：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.0.2.</span> <span class="toc-text">生产者客户端参数配置：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.0.3.</span> <span class="toc-text">消息发送：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.0.4.</span> <span class="toc-text">分区器：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.0.5.</span> <span class="toc-text">拦截器：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.1.</span> <span class="toc-text">原理分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.2.</span> <span class="toc-text">重要的生产者参数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">消费者</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.1.</span> <span class="toc-text">消费逻辑需要具备的步骤：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.2.</span> <span class="toc-text">消息消费</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.3.</span> <span class="toc-text">消息提交</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">3.3.1.</span> <span class="toc-text">自动提交</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">3.3.2.</span> <span class="toc-text">手动提交</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.4.</span> <span class="toc-text">指定位移消费</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.5.</span> <span class="toc-text">再均衡</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.6.</span> <span class="toc-text">消费者拦截器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.7.</span> <span class="toc-text">多线程实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.8.</span> <span class="toc-text">重要的消费者参数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">主题与分区</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">4.1.</span> <span class="toc-text">主题相关命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">4.2.</span> <span class="toc-text">分区、副本相关内容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.2.1.</span> <span class="toc-text">优先副本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.2.2.</span> <span class="toc-text">分区重分配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.2.3.</span> <span class="toc-text">复制限流</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.2.4.</span> <span class="toc-text">修改副本因子</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.2.5.</span> <span class="toc-text">性能相关</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text">日志存储</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.1.</span> <span class="toc-text">日志文件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.1.1.</span> <span class="toc-text">V0版本日志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.1.2.</span> <span class="toc-text">v1版本日志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.1.3.</span> <span class="toc-text">消息压缩</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.1.4.</span> <span class="toc-text">
     v2版本日志
     
         
@@ -3647,119 +3432,4 @@
     
     
     
-</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">5.1.5.</span> <span class="nav-text">v2版本日志</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">5.2.</span> <span class="nav-text">日志索引</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">5.3.</span> <span class="nav-text">偏移量索引</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">5.4.</span> <span class="nav-text">时间戳索引</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">5.5.</span> <span class="nav-text">日志清理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">5.5.1.</span> <span class="nav-text">日志删除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">5.6.</span> <span class="nav-text">日志压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">5.7.</span> <span class="nav-text">磁盘存储</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">深入服务端</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">6.1.</span> <span class="nav-text">协议相关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">6.1.1.</span> <span class="nav-text">发送消息协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">6.1.2.</span> <span class="nav-text">拉取消息协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">6.2.</span> <span class="nav-text">时间轮</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">6.3.</span> <span class="nav-text">延时操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">6.4.</span> <span class="nav-text">控制器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">6.5.</span> <span class="nav-text">优雅的关闭</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">6.6.</span> <span class="nav-text">分区leader的选举</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">7.</span> <span class="nav-text">深入客户端</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">7.1.</span> <span class="nav-text">消费者协调器、组协调器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">7.2.</span> <span class="nav-text">位移提交</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">7.3.</span> <span class="nav-text">事务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">7.3.1.</span> <span class="nav-text">幂等</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">7.3.2.</span> <span class="nav-text">事务</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">8.</span> <span class="nav-text">可靠性探究</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">8.1.</span> <span class="nav-text">LEO与HW</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">8.2.</span> <span class="nav-text">Leader Epoch</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">8.3.</span> <span class="nav-text">为何不支持读写分离</span></a></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">bank</p>
-  <div class="site-description" itemprop="description">行至水穷处,坐看云起时</div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">11</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">7</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">5</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-
-
-
-      </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2023</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">bank</span>
-</div>
-  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
-  </div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-</body>
-</html>
+</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.1.5.</span> <span class="toc-text">v2版本日志</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.2.</span> <span class="toc-text">日志索引</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.3.</span> <span class="toc-text">偏移量索引</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.4.</span> <span class="toc-text">时间戳索引</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.5.</span> <span class="toc-text">日志清理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.5.1.</span> <span class="toc-text">日志删除</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.6.</span> <span class="toc-text">日志压缩</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">5.7.</span> <span class="toc-text">磁盘存储</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">6.</span> <span class="toc-text">深入服务端</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.1.</span> <span class="toc-text">协议相关</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">6.1.1.</span> <span class="toc-text">发送消息协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">6.1.2.</span> <span class="toc-text">拉取消息协议</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.2.</span> <span class="toc-text">时间轮</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.3.</span> <span class="toc-text">延时操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.4.</span> <span class="toc-text">控制器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.5.</span> <span class="toc-text">优雅的关闭</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">6.6.</span> <span class="toc-text">分区leader的选举</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">7.</span> <span class="toc-text">深入客户端</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">7.1.</span> <span class="toc-text">消费者协调器、组协调器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">7.2.</span> <span class="toc-text">位移提交</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">7.3.</span> <span class="toc-text">事务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">7.3.1.</span> <span class="toc-text">幂等</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">7.3.2.</span> <span class="toc-text">事务</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">8.</span> <span class="toc-text">可靠性探究</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">8.1.</span> <span class="toc-text">LEO与HW</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">8.2.</span> <span class="toc-text">Leader Epoch</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">8.3.</span> <span class="toc-text">为何不支持读写分离</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/11/linux%E5%86%85%E6%A0%B8%E7%AD%96%E7%95%A5/" title="linux内核">linux内核</a><time datetime="2023-07-11T13:23:19.933Z" title="发表于 2023-07-11 21:23:19">2023-07-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/06/30/%E5%9C%A8%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E8%BE%93%E5%85%A5%E4%B8%80%E4%B8%AAurl,%E4%BC%9A%E7%BB%8F%E5%8E%86%E5%93%AA%E4%BA%9B%E8%BF%87%E7%A8%8B/" title="无题">无题</a><time datetime="2023-06-30T11:34:23.924Z" title="发表于 2023-06-30 19:34:23">2023-06-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/06/06/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/" title="网络编程的一些思考">网络编程的一些思考</a><time datetime="2023-06-06T09:30:37.533Z" title="发表于 2023-06-06 17:30:37">2023-06-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/06/01/%E4%BD%BF%E7%94%A8LSM-tree%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B0%8F%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93/" title="无题">无题</a><time datetime="2023-06-01T09:15:42.819Z" title="发表于 2023-06-01 17:15:42">2023-06-01</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/05/25/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93/" title="代码整洁之道">代码整洁之道</a><time datetime="2023-05-25T05:41:19.579Z" title="发表于 2023-05-25 13:41:19">2023-05-25</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By bank</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

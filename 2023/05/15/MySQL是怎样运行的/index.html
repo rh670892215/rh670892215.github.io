@@ -1,278 +1,166 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 6.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
-  </script>
-
-  <meta property="og:type" content="article">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>MySQL是怎样运行的 | bank blog</title><meta name="author" content="bank"><meta name="copyright" content="bank"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta property="og:type" content="article">
 <meta property="og:title" content="MySQL是怎样运行的">
 <meta property="og:url" content="http://example.com/2023/05/15/MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84/index.html">
 <meta property="og:site_name" content="bank blog">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/ea85e7be4cb149f7a4275960f6f5560c.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/f6cff671cd624accb6baef4371c7e34a.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/bb368f0496fa41febd32550859c25d39.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/b9261258f6f34918af73db3cd7714494.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/96938fcbafbd485d8f4e5b8e8b34ebb5.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/fdd675f101354bf694a685eaf985e434.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/22fe2129d905435b8f926696a4dbb1c5.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/5c9937594c6e4dc2ab961b44ba34ad62.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/06ba6a4095dc4fa78779b97efe619c6c.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/5e68f269342b40099a206fb3f7fe2121.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/af48204752e6427eb6ee931d452c2683.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/9a1db5a4a33e45d9967651551423089d.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/8cfbb687bebb457fadd3538da13d67ae.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/6d3b498ab7434f2ebb48f09e7cbbb7c2.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/c3003a44da464c9b90bf773fdda09d35.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/b912ac44b0514d3bba2f8d92e505e6de.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/2f552d75baa440f99bf32d8123e1042d.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/ac20007193db442ab54f020247ffdef0.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/696021aa83e0460fb74048c7f4337e71.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/ad63a9c5a1df4b4586c16615ee5558d1.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/426c798367dd4fdfa472303956b5d30f.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/613cc51487444a73b39e581b401d07ed.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/5365b7c09bad4cdba22e92e4ae69b5c5.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/5b7aa04038464c6a8535a28c802ff777.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/089e419ba95a4e6da4593ff2775e2913.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/9b6e5bc105dc4d808df1d6ab87456b70.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/6defd7ff362b4222b0794195719d79e5.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/411e7979f1ac4c3f92061b7b852ef00e.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/681b7fc8ee6142c0b57a5262814ef53f.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/5d95a4d78b9243e6b02d7b4aa250602b.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/8ce7f1bc20044bc380a48af71021fa9e.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/50308ffbc5aa4946a488e7a81bfdae29.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/b00bc18f18794462a9c6f39f9e0311c0.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/58e8357d2ff54c66b0d56260df6a6873.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/2de009dfd5e2417bbb91c02208fafca0.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/e30dfffb05e74c5cbc31ba773e33af39.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/a6d449c7316e44be8c055aca7fd2b790.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/94e535876b6446778070464136ea77ba.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/b85b94c586ee40aba9bd74adc2dc5c19.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/a976729f0f44490b849501fbbbf0d282.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/fa75bf55ed7441b39a8fbc195596427d.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/a2233f7ca09f4cfbbe4ec137c223952d.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/2718317a0f1d48d7ae425b2a30ec548a.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/d05ac3bc42d34d868063833a3fec4aa0.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/032f0d569fe74109b1f5ebec62affd9e.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/858f3129cca04361891c7719cf9e03ef.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/f12f5951c71e482ea8ae19151b6f68cd.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/819b55f00839450e94b431636054128c.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/10a6cb0b8f3045c68667cc52dc0566c5.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/2e533d88bd1d4fcaab8838ea30e1b797.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/6e3351bebc194e14915f784d1422de84.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/75903b63b1b94199bfd51420d8b96657.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/e4c8948dd73f41e5941d68695c2276e4.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/bd9e0f223b7c427a9fe67a1ae15944a5.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/cf4e8b4691de4720b4c86c482a51b5c7.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/f90e8a18f63e4180a35bcdba533cc6cf.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/a7361b9d54994d4b9bbcdb665f7617ac.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/574f9b294c5f42b69575e4ae8376061e.png">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/f9b4b6509220448cb1488fda940ade8c.png">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
 <meta property="article:published_time" content="2023-05-15T14:32:15.854Z">
 <meta property="article:modified_time" content="2023-05-16T07:48:57.819Z">
 <meta property="article:author" content="bank">
 <meta property="article:tag" content="mysql">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/ea85e7be4cb149f7a4275960f6f5560c.png">
-
-<link rel="canonical" href="http://example.com/2023/05/15/MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>MySQL是怎样运行的 | bank blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2023/05/15/MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'MySQL是怎样运行的',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-05-16 15:48:57'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
   }
 
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
 
-</head>
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
 
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
 
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">bank blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-  </ul>
-</nav>
-
-
-
-
-</div>
-    </header>
-
-    
-  <div class="back-to-top">
-    <i class="fa fa-arrow-up"></i>
-    <span>0%</span>
-  </div>
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
   
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
   
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/05/15/MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="bank">
-      <meta itemprop="description" content="行至水穷处,坐看云起时">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="bank blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          MySQL是怎样运行的
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-05-15 22:32:15" itemprop="dateCreated datePublished" datetime="2023-05-15T22:32:15+08:00">2023-05-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-05-16 15:48:57" itemprop="dateModified" datetime="2023-05-16T15:48:57+08:00">2023-05-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
     
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
     
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-        <meta name="referrer" content="no-referrer"/>
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="bank blog"><span class="site-name">bank blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">MySQL是怎样运行的</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-05-15T14:32:15.854Z" title="发表于 2023-05-15 22:32:15">2023-05-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-05-16T07:48:57.819Z" title="更新于 2023-05-16 15:48:57">2023-05-16</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="MySQL是怎样运行的"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><meta name="referrer" content="no-referrer"/>
 
 <span id="more"></span>
 
@@ -1900,199 +1788,4 @@
 <li>等待状态是一样的<br><img src="https://img-blog.csdnimg.cn/574f9b294c5f42b69575e4ae8376061e.png" alt="在这里插入图片描述"></li>
 </ul>
 <p><img src="https://img-blog.csdnimg.cn/f9b4b6509220448cb1488fda940ade8c.png" alt="在这里插入图片描述"></p>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/mysql/" rel="tag"># mysql</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item"></div>
-      <div class="post-nav-item">
-    <a href="/2023/05/16/golang%E6%8C%87%E9%92%88/" rel="next" title="golang指针讨论">
-      golang指针讨论 <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84"><span class="nav-number">1.</span> <span class="nav-text">MySQL是怎样运行的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E9%9B%86%E5%92%8C%E6%AF%94%E8%BE%83%E8%A7%84%E5%88%99"><span class="nav-number">2.</span> <span class="nav-text">字符集和比较规则</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A1%8C%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">行存储格式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#compact%E6%A0%BC%E5%BC%8F"><span class="nav-number">3.1.</span> <span class="nav-text">compact格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redundant"><span class="nav-number">3.2.</span> <span class="nav-text">redundant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dynamic%E5%92%8Ccompressed"><span class="nav-number">3.3.</span> <span class="nav-text">dynamic和compressed</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#innoDB%E6%95%B0%E6%8D%AE%E9%A1%B5"><span class="nav-number">4.</span> <span class="nav-text">innoDB数据页</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E8%AE%A8%E8%AE%BA"><span class="nav-number">5.</span> <span class="nav-text">索引讨论</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#inndoDB%E7%B4%A2%E5%BC%95"><span class="nav-number">5.1.</span> <span class="nav-text">inndoDB索引</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MYISAM%E7%9A%84%E7%B4%A2%E5%BC%95%E7%BB%93%E6%9E%84"><span class="nav-number">5.2.</span> <span class="nav-text">MYISAM的索引结构</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84%EF%BC%88%E5%BE%85%E5%AE%8C%E5%96%84%EF%BC%89"><span class="nav-number">6.</span> <span class="nav-text">数据存储结构（待完善）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#innoDB%E5%AD%98%E5%82%A8%E8%A1%A8%E6%95%B0%E6%8D%AE"><span class="nav-number">6.1.</span> <span class="nav-text">innoDB存储表数据</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-number">6.1.1.</span> <span class="nav-text">区的概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A1%A8%E7%A9%BA%E9%97%B4%E6%A6%82%E5%BF%B5"><span class="nav-number">6.1.2.</span> <span class="nav-text">表空间概念</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">6.1.2.1.</span> <span class="nav-text">系统表空间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%8B%AC%E7%AB%8B%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="nav-number">6.1.2.2.</span> <span class="nav-text">独立表空间</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MYISAM%E5%AD%98%E5%82%A8%E8%A1%A8%E6%95%B0%E6%8D%AE"><span class="nav-number">6.2.</span> <span class="nav-text">MYISAM存储表数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AE%B5%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-number">6.3.</span> <span class="nav-text">段的概念</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E6%96%B9%E6%B3%95"><span class="nav-number">7.</span> <span class="nav-text">访问方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#const"><span class="nav-number">7.0.1.</span> <span class="nav-text">const</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ref"><span class="nav-number">7.0.2.</span> <span class="nav-text">ref</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ref-or-null"><span class="nav-number">7.0.3.</span> <span class="nav-text">ref_or_null</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#range"><span class="nav-number">7.0.4.</span> <span class="nav-text">range</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#index"><span class="nav-number">7.0.5.</span> <span class="nav-text">index</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#all"><span class="nav-number">7.0.6.</span> <span class="nav-text">all</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B4%A2%E5%BC%95%E5%90%88%E5%B9%B6"><span class="nav-number">7.1.</span> <span class="nav-text">索引合并</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Intersection%E5%90%88%E5%B9%B6"><span class="nav-number">7.1.1.</span> <span class="nav-text">Intersection合并</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#union%E5%90%88%E5%B9%B6"><span class="nav-number">7.1.2.</span> <span class="nav-text">union合并</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sort-Union%E5%90%88%E5%B9%B6"><span class="nav-number">7.1.3.</span> <span class="nav-text">Sort-Union合并</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E8%AE%A8%E8%AE%BA"><span class="nav-number">8.</span> <span class="nav-text">连接讨论</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5"><span class="nav-number">8.1.</span> <span class="nav-text">相关概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">8.2.</span> <span class="nav-text">连接的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B5%8C%E5%A5%97%E5%BE%AA%E7%8E%AF%E8%BF%9E%E6%8E%A5"><span class="nav-number">8.2.1.</span> <span class="nav-text">嵌套循环连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%9D%97%E7%9A%84%E5%B5%8C%E5%A5%97%E5%8C%B9%E9%85%8D"><span class="nav-number">8.2.2.</span> <span class="nav-text">基于块的嵌套匹配</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mysql%E7%9A%84%E6%88%90%E6%9C%AC%E8%AE%A8%E8%AE%BA"><span class="nav-number">9.</span> <span class="nav-text">mysql的成本讨论</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E8%A1%A8%E6%9F%A5%E8%AF%A2"><span class="nav-number">9.1.</span> <span class="nav-text">单表查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E8%A1%A8%E6%89%AB%E6%8F%8F%E6%88%90%E6%9C%AC"><span class="nav-number">9.1.1.</span> <span class="nav-text">全表扫描成本</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#IO%E6%88%90%E6%9C%AC"><span class="nav-number">9.1.1.1.</span> <span class="nav-text">IO成本</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CPU%E6%88%90%E6%9C%AC"><span class="nav-number">9.1.1.2.</span> <span class="nav-text">CPU成本</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%BB%E4%BD%93%E6%88%90%E6%9C%AC"><span class="nav-number">9.1.1.3.</span> <span class="nav-text">总体成本</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%B4%A2%E5%BC%95%E6%88%90%E6%9C%AC"><span class="nav-number">9.1.2.</span> <span class="nav-text">使用索引成本</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#idx-key1%E6%88%90%E6%9C%AC"><span class="nav-number">9.1.2.1.</span> <span class="nav-text">idx_key1成本</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#IO%E6%88%90%E6%9C%AC-1"><span class="nav-number">9.1.2.1.1.</span> <span class="nav-text">IO成本</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#CPU%E6%88%90%E6%9C%AC-1"><span class="nav-number">9.1.2.1.2.</span> <span class="nav-text">CPU成本</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%80%BB%E4%BD%93%E6%88%90%E6%9C%AC-1"><span class="nav-number">9.1.2.1.3.</span> <span class="nav-text">总体成本</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#idx-key2%E6%88%90%E6%9C%AC"><span class="nav-number">9.1.2.2.</span> <span class="nav-text">idx_key2成本</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#IO%E6%88%90%E6%9C%AC-2"><span class="nav-number">9.1.2.2.1.</span> <span class="nav-text">IO成本</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#CPU%E6%88%90%E6%9C%AC-2"><span class="nav-number">9.1.2.2.2.</span> <span class="nav-text">CPU成本</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%80%BB%E4%BD%93%E6%88%90%E6%9C%AC-2"><span class="nav-number">9.1.2.2.3.</span> <span class="nav-text">总体成本</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E6%9F%A5%E8%AF%A2"><span class="nav-number">9.2.</span> <span class="nav-text">连接查询</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#innoDB%E7%9A%84%E7%BB%9F%E8%AE%A1%E6%95%B0%E6%8D%AE%E6%94%B6%E9%9B%86"><span class="nav-number">10.</span> <span class="nav-text">innoDB的统计数据收集</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MYSQL%E5%9F%BA%E4%BA%8E%E8%A7%84%E5%88%99%E7%9A%84%E4%BC%98%E5%8C%96"><span class="nav-number">11.</span> <span class="nav-text">MYSQL基于规则的优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E5%8C%96%E7%AE%80"><span class="nav-number">11.1.</span> <span class="nav-text">条件化简</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%90%E6%9F%A5%E8%AF%A2%E4%BB%8B%E7%BB%8D"><span class="nav-number">11.2.</span> <span class="nav-text">子查询介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%90%E6%9F%A5%E8%AF%A2%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9%EF%BC%9A"><span class="nav-number">11.2.1.</span> <span class="nav-text">子查询注意事项：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%90%E6%9F%A5%E8%AF%A2%E7%9A%84%E6%89%A7%E8%A1%8C%E6%AD%A5%E9%AA%A4"><span class="nav-number">11.3.</span> <span class="nav-text">子查询的执行步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E9%87%8F%E5%AD%90%E6%9F%A5%E8%AF%A2%E3%80%81%E8%A1%8C%E5%AD%90%E6%9F%A5%E8%AF%A2%E6%89%A7%E8%A1%8C%E6%96%B9%E5%BC%8F"><span class="nav-number">11.3.1.</span> <span class="nav-text">标量子查询、行子查询执行方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8D%E7%9B%B8%E5%85%B3%E5%AD%90%E6%9F%A5%E8%AF%A2"><span class="nav-number">11.3.1.1.</span> <span class="nav-text">不相关子查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%AD%90%E6%9F%A5%E8%AF%A2"><span class="nav-number">11.3.1.2.</span> <span class="nav-text">相关子查询</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IN%E5%AD%90%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96"><span class="nav-number">11.3.2.</span> <span class="nav-text">IN子查询优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8D%E7%9B%B8%E5%85%B3%E5%AD%90%E6%9F%A5%E8%AF%A2-1"><span class="nav-number">11.3.2.1.</span> <span class="nav-text">不相关子查询</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%89%A9%E5%8C%96%E8%A1%A8"><span class="nav-number">11.3.2.1.1.</span> <span class="nav-text">物化表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B0%86%E5%AD%90%E6%9F%A5%E8%AF%A2%E8%BD%AC%E5%8C%96%E6%88%90semi-join"><span class="nav-number">11.3.2.1.2.</span> <span class="nav-text">将子查询转化成semi-join</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#EXPLAIN%E8%AE%A8%E8%AE%BA"><span class="nav-number">12.</span> <span class="nav-text">EXPLAIN讨论</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8optimizer-trace-%E5%8A%9F%E8%83%BD%E6%9F%A5%E7%9C%8B%E4%BC%98%E5%8C%96%E6%AD%A5%E9%AA%A4"><span class="nav-number">12.1.</span> <span class="nav-text">使用optimizer trace 功能查看优化步骤</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#InnoDB%E7%9A%84Buffer"><span class="nav-number">13.</span> <span class="nav-text">InnoDB的Buffer</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E9%A1%B5%E7%9A%84%E6%9F%A5%E6%89%BE"><span class="nav-number">13.1.</span> <span class="nav-text">缓存页的查找</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E7%A9%BA%E9%97%B2%E7%BC%93%E5%AD%98%E9%A1%B5%E7%9A%84%E7%AE%A1%E7%90%86"><span class="nav-number">13.2.</span> <span class="nav-text">对空闲缓存页的管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%84%8F%E7%BC%93%E5%AD%98%E9%A1%B5%E7%9A%84%E5%A4%84%E7%90%86"><span class="nav-number">13.3.</span> <span class="nav-text">脏缓存页的处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9C%9F%E5%AE%9E%E7%8E%AF%E5%A2%83%E4%B8%AD%E7%9A%84Buffer-Pool"><span class="nav-number">13.4.</span> <span class="nav-text">真实环境中的Buffer Pool</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84"><span class="nav-number">13.4.1.</span> <span class="nav-text">存储结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%B7%E6%96%B0%E7%AD%96%E7%95%A5"><span class="nav-number">13.4.2.</span> <span class="nav-text">刷新策略</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%B7%E7%83%AD%E6%95%B0%E6%8D%AE%E5%88%B7%E6%96%B0"><span class="nav-number">13.4.2.1.</span> <span class="nav-text">冷热数据刷新</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%84%8F%E6%95%B0%E6%8D%AE%E5%88%B7%E6%96%B0"><span class="nav-number">13.4.2.2.</span> <span class="nav-text">脏数据刷新</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1"><span class="nav-number">14.</span> <span class="nav-text">事务</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#redo%E6%97%A5%E5%BF%97"><span class="nav-number">15.</span> <span class="nav-text">redo日志</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Mini-Transaction%EF%BC%88MTR%EF%BC%89"><span class="nav-number">15.1.</span> <span class="nav-text">Mini-Transaction（MTR）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redo%E6%97%A5%E5%BF%97%E5%86%99%E5%85%A5%E8%BF%87%E7%A8%8B"><span class="nav-number">15.2.</span> <span class="nav-text">redo日志写入过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#log-buffer"><span class="nav-number">15.2.1.</span> <span class="nav-text">log buffer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6"><span class="nav-number">15.2.2.</span> <span class="nav-text">日志文件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redo%E6%97%A5%E5%BF%97%E6%81%A2%E5%A4%8D%E8%BF%87%E7%A8%8B"><span class="nav-number">15.3.</span> <span class="nav-text">redo日志恢复过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%81%A2%E5%A4%8D%E8%B5%B7%E7%82%B9"><span class="nav-number">15.3.1.</span> <span class="nav-text">恢复起点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%81%A2%E5%A4%8D%E7%BB%88%E7%82%B9"><span class="nav-number">15.3.2.</span> <span class="nav-text">恢复终点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E6%81%A2%E5%A4%8D"><span class="nav-number">15.3.3.</span> <span class="nav-text">怎么恢复</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undo%E6%97%A5%E5%BF%97"><span class="nav-number">16.</span> <span class="nav-text">undo日志</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#undo%E6%97%A5%E5%BF%97%E6%A0%BC%E5%BC%8F%E5%8F%8A%E7%B1%BB%E5%9E%8B"><span class="nav-number">16.1.</span> <span class="nav-text">undo日志格式及类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1id"><span class="nav-number">16.1.1.</span> <span class="nav-text">事务id</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84"><span class="nav-number">16.1.2.</span> <span class="nav-text">日志结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#insert"><span class="nav-number">16.1.2.1.</span> <span class="nav-text">insert</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delete"><span class="nav-number">16.1.2.2.</span> <span class="nav-text">delete</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#update"><span class="nav-number">16.1.2.3.</span> <span class="nav-text">update</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%8D%E6%9B%B4%E6%96%B0%E4%B8%BB%E9%94%AE"><span class="nav-number">16.1.2.3.1.</span> <span class="nav-text">不更新主键</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E4%B8%BB%E9%94%AE"><span class="nav-number">16.1.2.3.2.</span> <span class="nav-text">更新主键</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undo%E6%97%A5%E5%BF%97%E5%86%99%E5%85%A5%E8%BF%87%E7%A8%8B"><span class="nav-number">16.2.</span> <span class="nav-text">undo日志写入过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#undo%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84"><span class="nav-number">16.2.1.</span> <span class="nav-text">undo日志结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#undo%E9%A1%B5%E9%9D%A2%E9%87%8D%E7%94%A8"><span class="nav-number">16.2.2.</span> <span class="nav-text">undo页面重用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9E%E6%BB%9A%E6%AE%B5"><span class="nav-number">16.2.3.</span> <span class="nav-text">回滚段</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%8E%E5%9B%9E%E6%BB%9A%E6%AE%B5%E4%B8%AD%E7%94%B3%E8%AF%B7undo%E9%93%BE%E8%A1%A8"><span class="nav-number">16.2.3.1.</span> <span class="nav-text">从回滚段中申请undo链表</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E7%9A%84%E8%AE%A8%E8%AE%BA"><span class="nav-number">17.</span> <span class="nav-text">关于事务的讨论</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">17.1.</span> <span class="nav-text">事务的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E5%BC%8F"><span class="nav-number">17.2.</span> <span class="nav-text">事务问题解决方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E7%9A%84%E8%AE%BE%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">17.3.</span> <span class="nav-text">事务隔离级别的设置方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">17.4.</span> <span class="nav-text">事务隔离级别的实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%89%88%E6%9C%AC%E9%93%BE"><span class="nav-number">17.4.1.</span> <span class="nav-text">版本链</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ReadView"><span class="nav-number">17.4.2.</span> <span class="nav-text">ReadView</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E6%83%85%E5%86%B5%E5%88%86%E6%9E%90"><span class="nav-number">17.4.3.</span> <span class="nav-text">实际情况分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#READ-COMMITTED-%E2%80%94%E2%80%94-%E6%AF%8F%E6%AC%A1%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE%E5%89%8D%E9%83%BD%E7%94%9F%E6%88%90%E4%B8%80%E4%B8%AAReadView"><span class="nav-number">17.4.3.1.</span> <span class="nav-text">READ COMMITTED —— 每次读取数据前都生成一个ReadView</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#REPEATABLE-READ-%E2%80%94%E2%80%94-%E5%9C%A8%E7%AC%AC%E4%B8%80%E6%AC%A1%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE%E6%97%B6%E7%94%9F%E6%88%90%E4%B8%80%E4%B8%AAReadView"><span class="nav-number">17.4.3.2.</span> <span class="nav-text">REPEATABLE READ —— 在第一次读取数据时生成一个ReadView</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E9%94%81%E7%9A%84%E8%AE%A8%E8%AE%BA"><span class="nav-number">18.</span> <span class="nav-text">关于锁的讨论</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%94%81%E5%AE%9A%E8%AF%BB"><span class="nav-number">18.1.</span> <span class="nav-text">锁定读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%94%81%E5%AE%9A%E5%86%99"><span class="nav-number">18.2.</span> <span class="nav-text">锁定写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%B2%92%E5%BA%A6%E9%94%81"><span class="nav-number">18.3.</span> <span class="nav-text">多粒度锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MYSQL%E4%B8%AD%E7%9A%84%E8%A1%8C%E9%94%81%E5%92%8C%E8%A1%A8%E9%94%81"><span class="nav-number">18.4.</span> <span class="nav-text">MYSQL中的行锁和表锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A1%A8%E9%94%81"><span class="nav-number">18.4.1.</span> <span class="nav-text">表锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A1%8C%E9%94%81"><span class="nav-number">18.4.2.</span> <span class="nav-text">行锁</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%94%81%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">18.5.</span> <span class="nav-text">锁的结构</span></a></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">bank</p>
-  <div class="site-description" itemprop="description">行至水穷处,坐看云起时</div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">11</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">7</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">5</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-
-
-
-      </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2023</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">bank</span>
-</div>
-  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
-  </div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-</body>
-</html>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://example.com">bank</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/05/15/MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84/">http://example.com/2023/05/15/MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">bank blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/mysql/">mysql</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-full"><a href="/2023/05/16/golang%E6%8C%87%E9%92%88/" title="golang指针讨论"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">golang指针讨论</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">bank</div><div class="author-info__description">行至水穷处,坐看云起时</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%90%E8%A1%8C%E7%9A%84"><span class="toc-number">1.</span> <span class="toc-text">MySQL是怎样运行的</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AD%97%E7%AC%A6%E9%9B%86%E5%92%8C%E6%AF%94%E8%BE%83%E8%A7%84%E5%88%99"><span class="toc-number">2.</span> <span class="toc-text">字符集和比较规则</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A1%8C%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="toc-number">3.</span> <span class="toc-text">行存储格式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#compact%E6%A0%BC%E5%BC%8F"><span class="toc-number">3.1.</span> <span class="toc-text">compact格式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#redundant"><span class="toc-number">3.2.</span> <span class="toc-text">redundant</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#dynamic%E5%92%8Ccompressed"><span class="toc-number">3.3.</span> <span class="toc-text">dynamic和compressed</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#innoDB%E6%95%B0%E6%8D%AE%E9%A1%B5"><span class="toc-number">4.</span> <span class="toc-text">innoDB数据页</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%B4%A2%E5%BC%95%E8%AE%A8%E8%AE%BA"><span class="toc-number">5.</span> <span class="toc-text">索引讨论</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#inndoDB%E7%B4%A2%E5%BC%95"><span class="toc-number">5.1.</span> <span class="toc-text">inndoDB索引</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MYISAM%E7%9A%84%E7%B4%A2%E5%BC%95%E7%BB%93%E6%9E%84"><span class="toc-number">5.2.</span> <span class="toc-text">MYISAM的索引结构</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84%EF%BC%88%E5%BE%85%E5%AE%8C%E5%96%84%EF%BC%89"><span class="toc-number">6.</span> <span class="toc-text">数据存储结构（待完善）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#innoDB%E5%AD%98%E5%82%A8%E8%A1%A8%E6%95%B0%E6%8D%AE"><span class="toc-number">6.1.</span> <span class="toc-text">innoDB存储表数据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8C%BA%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="toc-number">6.1.1.</span> <span class="toc-text">区的概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%A8%E7%A9%BA%E9%97%B4%E6%A6%82%E5%BF%B5"><span class="toc-number">6.1.2.</span> <span class="toc-text">表空间概念</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="toc-number">6.1.2.1.</span> <span class="toc-text">系统表空间</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%8B%AC%E7%AB%8B%E8%A1%A8%E7%A9%BA%E9%97%B4"><span class="toc-number">6.1.2.2.</span> <span class="toc-text">独立表空间</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MYISAM%E5%AD%98%E5%82%A8%E8%A1%A8%E6%95%B0%E6%8D%AE"><span class="toc-number">6.2.</span> <span class="toc-text">MYISAM存储表数据</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AE%B5%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="toc-number">6.3.</span> <span class="toc-text">段的概念</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%AE%BF%E9%97%AE%E6%96%B9%E6%B3%95"><span class="toc-number">7.</span> <span class="toc-text">访问方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#const"><span class="toc-number">7.0.1.</span> <span class="toc-text">const</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ref"><span class="toc-number">7.0.2.</span> <span class="toc-text">ref</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ref-or-null"><span class="toc-number">7.0.3.</span> <span class="toc-text">ref_or_null</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#range"><span class="toc-number">7.0.4.</span> <span class="toc-text">range</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#index"><span class="toc-number">7.0.5.</span> <span class="toc-text">index</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#all"><span class="toc-number">7.0.6.</span> <span class="toc-text">all</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B4%A2%E5%BC%95%E5%90%88%E5%B9%B6"><span class="toc-number">7.1.</span> <span class="toc-text">索引合并</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Intersection%E5%90%88%E5%B9%B6"><span class="toc-number">7.1.1.</span> <span class="toc-text">Intersection合并</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#union%E5%90%88%E5%B9%B6"><span class="toc-number">7.1.2.</span> <span class="toc-text">union合并</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sort-Union%E5%90%88%E5%B9%B6"><span class="toc-number">7.1.3.</span> <span class="toc-text">Sort-Union合并</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%9E%E6%8E%A5%E8%AE%A8%E8%AE%BA"><span class="toc-number">8.</span> <span class="toc-text">连接讨论</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5"><span class="toc-number">8.1.</span> <span class="toc-text">相关概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%9E%E6%8E%A5%E7%9A%84%E5%8E%9F%E7%90%86"><span class="toc-number">8.2.</span> <span class="toc-text">连接的原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B5%8C%E5%A5%97%E5%BE%AA%E7%8E%AF%E8%BF%9E%E6%8E%A5"><span class="toc-number">8.2.1.</span> <span class="toc-text">嵌套循环连接</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E5%9D%97%E7%9A%84%E5%B5%8C%E5%A5%97%E5%8C%B9%E9%85%8D"><span class="toc-number">8.2.2.</span> <span class="toc-text">基于块的嵌套匹配</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#mysql%E7%9A%84%E6%88%90%E6%9C%AC%E8%AE%A8%E8%AE%BA"><span class="toc-number">9.</span> <span class="toc-text">mysql的成本讨论</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95%E8%A1%A8%E6%9F%A5%E8%AF%A2"><span class="toc-number">9.1.</span> <span class="toc-text">单表查询</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%A8%E8%A1%A8%E6%89%AB%E6%8F%8F%E6%88%90%E6%9C%AC"><span class="toc-number">9.1.1.</span> <span class="toc-text">全表扫描成本</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#IO%E6%88%90%E6%9C%AC"><span class="toc-number">9.1.1.1.</span> <span class="toc-text">IO成本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#CPU%E6%88%90%E6%9C%AC"><span class="toc-number">9.1.1.2.</span> <span class="toc-text">CPU成本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%BB%E4%BD%93%E6%88%90%E6%9C%AC"><span class="toc-number">9.1.1.3.</span> <span class="toc-text">总体成本</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%B4%A2%E5%BC%95%E6%88%90%E6%9C%AC"><span class="toc-number">9.1.2.</span> <span class="toc-text">使用索引成本</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#idx-key1%E6%88%90%E6%9C%AC"><span class="toc-number">9.1.2.1.</span> <span class="toc-text">idx_key1成本</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#IO%E6%88%90%E6%9C%AC-1"><span class="toc-number">9.1.2.1.1.</span> <span class="toc-text">IO成本</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#CPU%E6%88%90%E6%9C%AC-1"><span class="toc-number">9.1.2.1.2.</span> <span class="toc-text">CPU成本</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%80%BB%E4%BD%93%E6%88%90%E6%9C%AC-1"><span class="toc-number">9.1.2.1.3.</span> <span class="toc-text">总体成本</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#idx-key2%E6%88%90%E6%9C%AC"><span class="toc-number">9.1.2.2.</span> <span class="toc-text">idx_key2成本</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#IO%E6%88%90%E6%9C%AC-2"><span class="toc-number">9.1.2.2.1.</span> <span class="toc-text">IO成本</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#CPU%E6%88%90%E6%9C%AC-2"><span class="toc-number">9.1.2.2.2.</span> <span class="toc-text">CPU成本</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%80%BB%E4%BD%93%E6%88%90%E6%9C%AC-2"><span class="toc-number">9.1.2.2.3.</span> <span class="toc-text">总体成本</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%9E%E6%8E%A5%E6%9F%A5%E8%AF%A2"><span class="toc-number">9.2.</span> <span class="toc-text">连接查询</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#innoDB%E7%9A%84%E7%BB%9F%E8%AE%A1%E6%95%B0%E6%8D%AE%E6%94%B6%E9%9B%86"><span class="toc-number">10.</span> <span class="toc-text">innoDB的统计数据收集</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#MYSQL%E5%9F%BA%E4%BA%8E%E8%A7%84%E5%88%99%E7%9A%84%E4%BC%98%E5%8C%96"><span class="toc-number">11.</span> <span class="toc-text">MYSQL基于规则的优化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9D%A1%E4%BB%B6%E5%8C%96%E7%AE%80"><span class="toc-number">11.1.</span> <span class="toc-text">条件化简</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%90%E6%9F%A5%E8%AF%A2%E4%BB%8B%E7%BB%8D"><span class="toc-number">11.2.</span> <span class="toc-text">子查询介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%90%E6%9F%A5%E8%AF%A2%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9%EF%BC%9A"><span class="toc-number">11.2.1.</span> <span class="toc-text">子查询注意事项：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%90%E6%9F%A5%E8%AF%A2%E7%9A%84%E6%89%A7%E8%A1%8C%E6%AD%A5%E9%AA%A4"><span class="toc-number">11.3.</span> <span class="toc-text">子查询的执行步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%87%E9%87%8F%E5%AD%90%E6%9F%A5%E8%AF%A2%E3%80%81%E8%A1%8C%E5%AD%90%E6%9F%A5%E8%AF%A2%E6%89%A7%E8%A1%8C%E6%96%B9%E5%BC%8F"><span class="toc-number">11.3.1.</span> <span class="toc-text">标量子查询、行子查询执行方式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E7%9B%B8%E5%85%B3%E5%AD%90%E6%9F%A5%E8%AF%A2"><span class="toc-number">11.3.1.1.</span> <span class="toc-text">不相关子查询</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%9B%B8%E5%85%B3%E5%AD%90%E6%9F%A5%E8%AF%A2"><span class="toc-number">11.3.1.2.</span> <span class="toc-text">相关子查询</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IN%E5%AD%90%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96"><span class="toc-number">11.3.2.</span> <span class="toc-text">IN子查询优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E7%9B%B8%E5%85%B3%E5%AD%90%E6%9F%A5%E8%AF%A2-1"><span class="toc-number">11.3.2.1.</span> <span class="toc-text">不相关子查询</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%89%A9%E5%8C%96%E8%A1%A8"><span class="toc-number">11.3.2.1.1.</span> <span class="toc-text">物化表</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%B0%86%E5%AD%90%E6%9F%A5%E8%AF%A2%E8%BD%AC%E5%8C%96%E6%88%90semi-join"><span class="toc-number">11.3.2.1.2.</span> <span class="toc-text">将子查询转化成semi-join</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#EXPLAIN%E8%AE%A8%E8%AE%BA"><span class="toc-number">12.</span> <span class="toc-text">EXPLAIN讨论</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8optimizer-trace-%E5%8A%9F%E8%83%BD%E6%9F%A5%E7%9C%8B%E4%BC%98%E5%8C%96%E6%AD%A5%E9%AA%A4"><span class="toc-number">12.1.</span> <span class="toc-text">使用optimizer trace 功能查看优化步骤</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#InnoDB%E7%9A%84Buffer"><span class="toc-number">13.</span> <span class="toc-text">InnoDB的Buffer</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%93%E5%AD%98%E9%A1%B5%E7%9A%84%E6%9F%A5%E6%89%BE"><span class="toc-number">13.1.</span> <span class="toc-text">缓存页的查找</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E7%A9%BA%E9%97%B2%E7%BC%93%E5%AD%98%E9%A1%B5%E7%9A%84%E7%AE%A1%E7%90%86"><span class="toc-number">13.2.</span> <span class="toc-text">对空闲缓存页的管理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%84%8F%E7%BC%93%E5%AD%98%E9%A1%B5%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">13.3.</span> <span class="toc-text">脏缓存页的处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9C%9F%E5%AE%9E%E7%8E%AF%E5%A2%83%E4%B8%AD%E7%9A%84Buffer-Pool"><span class="toc-number">13.4.</span> <span class="toc-text">真实环境中的Buffer Pool</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84"><span class="toc-number">13.4.1.</span> <span class="toc-text">存储结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%B7%E6%96%B0%E7%AD%96%E7%95%A5"><span class="toc-number">13.4.2.</span> <span class="toc-text">刷新策略</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%B7%E7%83%AD%E6%95%B0%E6%8D%AE%E5%88%B7%E6%96%B0"><span class="toc-number">13.4.2.1.</span> <span class="toc-text">冷热数据刷新</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%84%8F%E6%95%B0%E6%8D%AE%E5%88%B7%E6%96%B0"><span class="toc-number">13.4.2.2.</span> <span class="toc-text">脏数据刷新</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1"><span class="toc-number">14.</span> <span class="toc-text">事务</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#redo%E6%97%A5%E5%BF%97"><span class="toc-number">15.</span> <span class="toc-text">redo日志</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Mini-Transaction%EF%BC%88MTR%EF%BC%89"><span class="toc-number">15.1.</span> <span class="toc-text">Mini-Transaction（MTR）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#redo%E6%97%A5%E5%BF%97%E5%86%99%E5%85%A5%E8%BF%87%E7%A8%8B"><span class="toc-number">15.2.</span> <span class="toc-text">redo日志写入过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#log-buffer"><span class="toc-number">15.2.1.</span> <span class="toc-text">log buffer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6"><span class="toc-number">15.2.2.</span> <span class="toc-text">日志文件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#redo%E6%97%A5%E5%BF%97%E6%81%A2%E5%A4%8D%E8%BF%87%E7%A8%8B"><span class="toc-number">15.3.</span> <span class="toc-text">redo日志恢复过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%81%A2%E5%A4%8D%E8%B5%B7%E7%82%B9"><span class="toc-number">15.3.1.</span> <span class="toc-text">恢复起点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%81%A2%E5%A4%8D%E7%BB%88%E7%82%B9"><span class="toc-number">15.3.2.</span> <span class="toc-text">恢复终点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%8E%E4%B9%88%E6%81%A2%E5%A4%8D"><span class="toc-number">15.3.3.</span> <span class="toc-text">怎么恢复</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undo%E6%97%A5%E5%BF%97"><span class="toc-number">16.</span> <span class="toc-text">undo日志</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#undo%E6%97%A5%E5%BF%97%E6%A0%BC%E5%BC%8F%E5%8F%8A%E7%B1%BB%E5%9E%8B"><span class="toc-number">16.1.</span> <span class="toc-text">undo日志格式及类型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1id"><span class="toc-number">16.1.1.</span> <span class="toc-text">事务id</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84"><span class="toc-number">16.1.2.</span> <span class="toc-text">日志结构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#insert"><span class="toc-number">16.1.2.1.</span> <span class="toc-text">insert</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#delete"><span class="toc-number">16.1.2.2.</span> <span class="toc-text">delete</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#update"><span class="toc-number">16.1.2.3.</span> <span class="toc-text">update</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%8D%E6%9B%B4%E6%96%B0%E4%B8%BB%E9%94%AE"><span class="toc-number">16.1.2.3.1.</span> <span class="toc-text">不更新主键</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%9B%B4%E6%96%B0%E4%B8%BB%E9%94%AE"><span class="toc-number">16.1.2.3.2.</span> <span class="toc-text">更新主键</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undo%E6%97%A5%E5%BF%97%E5%86%99%E5%85%A5%E8%BF%87%E7%A8%8B"><span class="toc-number">16.2.</span> <span class="toc-text">undo日志写入过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undo%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84"><span class="toc-number">16.2.1.</span> <span class="toc-text">undo日志结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undo%E9%A1%B5%E9%9D%A2%E9%87%8D%E7%94%A8"><span class="toc-number">16.2.2.</span> <span class="toc-text">undo页面重用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9E%E6%BB%9A%E6%AE%B5"><span class="toc-number">16.2.3.</span> <span class="toc-text">回滚段</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%8E%E5%9B%9E%E6%BB%9A%E6%AE%B5%E4%B8%AD%E7%94%B3%E8%AF%B7undo%E9%93%BE%E8%A1%A8"><span class="toc-number">16.2.3.1.</span> <span class="toc-text">从回滚段中申请undo链表</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E7%9A%84%E8%AE%A8%E8%AE%BA"><span class="toc-number">17.</span> <span class="toc-text">关于事务的讨论</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">17.1.</span> <span class="toc-text">事务的问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E5%BC%8F"><span class="toc-number">17.2.</span> <span class="toc-text">事务问题解决方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E7%9A%84%E8%AE%BE%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="toc-number">17.3.</span> <span class="toc-text">事务隔离级别的设置方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="toc-number">17.4.</span> <span class="toc-text">事务隔离级别的实现原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%89%88%E6%9C%AC%E9%93%BE"><span class="toc-number">17.4.1.</span> <span class="toc-text">版本链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ReadView"><span class="toc-number">17.4.2.</span> <span class="toc-text">ReadView</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%99%85%E6%83%85%E5%86%B5%E5%88%86%E6%9E%90"><span class="toc-number">17.4.3.</span> <span class="toc-text">实际情况分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#READ-COMMITTED-%E2%80%94%E2%80%94-%E6%AF%8F%E6%AC%A1%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE%E5%89%8D%E9%83%BD%E7%94%9F%E6%88%90%E4%B8%80%E4%B8%AAReadView"><span class="toc-number">17.4.3.1.</span> <span class="toc-text">READ COMMITTED —— 每次读取数据前都生成一个ReadView</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#REPEATABLE-READ-%E2%80%94%E2%80%94-%E5%9C%A8%E7%AC%AC%E4%B8%80%E6%AC%A1%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE%E6%97%B6%E7%94%9F%E6%88%90%E4%B8%80%E4%B8%AAReadView"><span class="toc-number">17.4.3.2.</span> <span class="toc-text">REPEATABLE READ —— 在第一次读取数据时生成一个ReadView</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B3%E4%BA%8E%E9%94%81%E7%9A%84%E8%AE%A8%E8%AE%BA"><span class="toc-number">18.</span> <span class="toc-text">关于锁的讨论</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%94%81%E5%AE%9A%E8%AF%BB"><span class="toc-number">18.1.</span> <span class="toc-text">锁定读</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%94%81%E5%AE%9A%E5%86%99"><span class="toc-number">18.2.</span> <span class="toc-text">锁定写</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E7%B2%92%E5%BA%A6%E9%94%81"><span class="toc-number">18.3.</span> <span class="toc-text">多粒度锁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MYSQL%E4%B8%AD%E7%9A%84%E8%A1%8C%E9%94%81%E5%92%8C%E8%A1%A8%E9%94%81"><span class="toc-number">18.4.</span> <span class="toc-text">MYSQL中的行锁和表锁</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%A8%E9%94%81"><span class="toc-number">18.4.1.</span> <span class="toc-text">表锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%8C%E9%94%81"><span class="toc-number">18.4.2.</span> <span class="toc-text">行锁</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%94%81%E7%9A%84%E7%BB%93%E6%9E%84"><span class="toc-number">18.5.</span> <span class="toc-text">锁的结构</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/11/linux%E5%86%85%E6%A0%B8%E7%AD%96%E7%95%A5/" title="linux内核">linux内核</a><time datetime="2023-07-11T13:23:19.933Z" title="发表于 2023-07-11 21:23:19">2023-07-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/06/30/%E5%9C%A8%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E8%BE%93%E5%85%A5%E4%B8%80%E4%B8%AAurl,%E4%BC%9A%E7%BB%8F%E5%8E%86%E5%93%AA%E4%BA%9B%E8%BF%87%E7%A8%8B/" title="无题">无题</a><time datetime="2023-06-30T11:34:23.924Z" title="发表于 2023-06-30 19:34:23">2023-06-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/06/06/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/" title="网络编程的一些思考">网络编程的一些思考</a><time datetime="2023-06-06T09:30:37.533Z" title="发表于 2023-06-06 17:30:37">2023-06-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/06/01/%E4%BD%BF%E7%94%A8LSM-tree%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B0%8F%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93/" title="无题">无题</a><time datetime="2023-06-01T09:15:42.819Z" title="发表于 2023-06-01 17:15:42">2023-06-01</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/05/25/%E4%BB%A3%E7%A0%81%E6%95%B4%E6%B4%81%E4%B9%8B%E9%81%93/" title="代码整洁之道">代码整洁之道</a><time datetime="2023-05-25T05:41:19.579Z" title="发表于 2023-05-25 13:41:19">2023-05-25</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By bank</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
