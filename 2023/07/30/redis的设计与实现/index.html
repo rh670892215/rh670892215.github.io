@@ -1,0 +1,2295 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>redis的设计与实现 | bank blog</title><meta name="author" content="bank"><meta name="copyright" content="bank"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta property="og:type" content="article">
+<meta property="og:title" content="redis的设计与实现">
+<meta property="og:url" content="http://example.com/2023/07/30/redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="bank blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
+<meta property="article:published_time" content="2023-07-30T07:35:59.103Z">
+<meta property="article:modified_time" content="2023-07-30T07:40:06.722Z">
+<meta property="article:author" content="bank">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2023/07/30/redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'redis的设计与实现',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-07-30 15:40:06'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="bank blog"><span class="site-name">bank blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">redis的设计与实现</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-07-30T07:35:59.103Z" title="发表于 2023-07-30 15:35:59">2023-07-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-07-30T07:40:06.722Z" title="更新于 2023-07-30 15:40:06">2023-07-30</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">7.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>24分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="redis的设计与实现"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><meta name="referrer" content="no-referrer"/>
+<span id="more"></span>
+
+<!--?xml version="1.0" encoding="UTF-8"?--><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="exporter-version" content="Evernote Mac 9.5.27 (467686)" />
+  <meta name="author" content="R。" />
+  <meta name="created" content="2022-09-28 12:27:41 +0000" />
+  <meta name="source" content="yinxiang.superNote" />
+  <meta name="updated" content="2023-01-17 10:32:08 +0000" />
+  <meta name="content-class" content="yinxiang.superNote" />
+  <title>Redis的设计与实现</title>
+ </head>
+ <body>
+  <h1><span style="font-size: 36px;">第一部分 数据结构和对象</span></h1>
+  <h2><span style="font-size: 24px;">SDS：</span></h2>
+  <img src="//Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/5BE5CC25-5CB2-4495-A148-7D17A61AA3EC.png" height="298" width="734" />
+  <div>
+   free：未分配空间；
+  </div>
+  <div>
+   len：保存字符串长度；
+  </div>
+  <div>
+   buf：char数组，最后一位保存’\0’
+  </div>
+  <div>
+   与C字符串相比的优点：
+  </div>
+  <ol>
+   <li>
+    <div>
+     常数复杂度获取字符串长度；
+    </div></li>
+   <li>
+    <div>
+     杜绝缓冲区溢出；
+    </div></li>
+   <li>
+    <div>
+     减少修改字符串时带来的内存充分配次数；
+    </div></li>
+  </ol>
+  <div>
+   &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;具体策略：
+  </div>
+  <ul>
+   <ul>
+    <li>
+     <div>
+      空间预分配：对SDS修改时，除了给SDS分配len还要分配free；当len&lt;1MB时，free=len；否者len=1MB；
+     </div></li>
+    <li>
+     <div>
+      惰性空间释放：当字符串缩短时，并不直接回收多出来的空间，而是由free接管；
+     </div></li>
+   </ul>
+  </ul>
+  <ol start="4">
+   <li>
+    <div>
+     二进制安全：redis保存一系列二进制数据，来保证数据在写入时是什么样，读取时将是什么样；（c格式的字符串以空格’\0’表示结束，所以不能保存空格，而redis可以）
+    </div></li>
+   <li>
+    <div>
+     兼容部分C字符串函数；
+    </div></li>
+  </ol>
+  <div>
+   <br />
+  </div>
+  <table style="--en-fitwindow:false;border-left:1px solid #d9d9d9;border-top:1px solid #d9d9d9;border-collapse:collapse;width:680px;" width="680px">
+   <colgroup>
+    <col style="width: 294px;" />
+    <col style="width: 386px;" />
+   </colgroup>
+   <tbody>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       C字符串
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       SDS
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       获取字符串长度的复杂度是O（N）
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       获取字符串长度的复杂度是O（1）
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       API不安全，可能会造成缓冲区溢出
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       API安全，不会造成缓冲区溢出
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       修改字符串长度N次必然会执行N次内存重分配
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       修改字符串长度N最多会执行N次内存重分配
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       只能保存文本数据
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       可以保存文本或者二进制数据
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       可以使用&lt;string.h&gt;库中的函数
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       可以使用部分&lt;string.h&gt;库中的部分函数
+      </div></td>
+    </tr>
+   </tbody>
+  </table>
+  <div>
+   <br />
+  </div>
+  <h2>链表：</h2>
+  <div>
+   链表节点结构：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/7BFED305-9426-48B5-967B-7020FC0FBE32.png" height="172" width="1582" />
+  <div>
+   链表结构：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/7F835EFF-0212-43DE-97AC-F7775DEC0449.png" height="464" width="1446" />
+  <div>
+   特性：双端、无环、带表头指针和表尾指针、带链表长度计数器、多态；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2><span style="font-size: 24px;">字典：</span></h2>
+  <div>
+   redis的字典使用哈希表作为底层实现，一个哈希表里面可以有多个哈希表节点，每个哈希表节点就保存了字典中的一个键值对；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/D59C2CCF-6ABC-4CEE-AD8B-44821CF90689.png" height="970" width="1772" />
+  <div>
+   <br />
+  </div>
+  <div>
+   dict：
+  </div>
+  <div>
+   type：指向dicType结构的指针，保存一系例用于操作特定类型键值对的函数；
+  </div>
+  <div>
+   privdata：保存需要传给那些类型的特殊函数的可选参数；
+  </div>
+  <div>
+   ht：包含两个项的数组，其中每一项是一个dictht哈希表，一般字典使用ht[0]，rehash时使用h[1]
+  </div>
+  <div>
+   rehashidx：记录rehash的进度，若目前没有在rehash则是-1；
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>哈希表（dictht）：</h2>
+  <div>
+   table：数组，每个元素指向一个键值对；
+  </div>
+  <div>
+   size：容量；
+  </div>
+  <div>
+   sizemask：size-1；
+  </div>
+  <div>
+   used：存储键值对个数；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   哈希表节点结构（dictEntry）：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/58E3FE07-355F-42BD-9F56-5EF4C7FB3646.png" height="544" width="568" />
+  <div>
+   <br />
+  </div>
+  <div>
+   哈希算法：Redis使用MurmurHash2算法计算键的hash值；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   解决键冲突：Redis使用链地址法解决键冲突；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   rehash：
+  </div>
+  <div>
+   扩展操作：ht[1]的大小是第一个大于等于ht[0].used*2的（2的n次方）
+  </div>
+  <div>
+   收缩操作：ht[1]的大小是第一个大于等于ht[0].used的（2的n次方）
+  </div>
+  <div>
+   以下情况会触发rehash：
+  </div>
+  <ol>
+   <li>
+    <div>
+     服务器目前没有在执行BGSAVE命令或BGREWRITEAOF命令，且哈希表的负载因子大于等于1；
+    </div></li>
+   <li>
+    <div>
+     服务器目前正在在执行BGSAVE命令或BGREWRITEAOF命令，且哈希表的负载因子大于等于5；
+    </div></li>
+   <li>
+    <div>
+     哈希表的负载因子小于0.1时，自动执行收缩操作；
+    </div></li>
+  </ol>
+  <div>
+   负载因子=哈希表已保存节点数量/哈希表大小
+  </div>
+  <div>
+   rehash的过程不是一次性、集中式的完成的，而是分多次、渐进式的完成的；使用rehashidx记录rehash进行到了哪一个key，待将h[0]中的key迁移到h[1]上后，rehashidx置-1，rehash过程中新添加的key一律添加到h[1]中；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   redis中的字典使用哈希表作为底层实现，每个字典有两个哈希表，一个平时使用，另一个仅在rehash时使用；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>跳表：</h2>
+  <div>
+   一种有序数据结构，通过在每个节点中维持多个指向其他节点的指针，从而达到快速访问节点的目的；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/7D23E5D9-3C6E-475A-845D-A18023D76ABA.png" height="530" width="1394" />
+  <div>
+   header：跳表头节点
+  </div>
+  <div>
+   tail：跳表尾节点
+  </div>
+  <div>
+   level：跳表层数（每个跳跃表的层高都是1～32之间的随机数）
+  </div>
+  <div>
+   length：跳表长度，即包含的节点数量
+  </div>
+  <div>
+   层（L1、L2、L3）；
+  </div>
+  <div>
+   BW：表示后退指针，指向位于当前节点的前一个节点；
+  </div>
+  <div>
+   score：该节点的得分；
+  </div>
+  <div>
+   成员对象（o1、o2、o3）：节点保存的对象；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>整数集合：</h2>
+  <div>
+   当一个集合只包含整数值元素，且这个集合元素数量不多时，Redis使用整数集合作为集合键的底层实现，可以保存int16、int32、int64类型的元素；(有序无重复)
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/527068EF-E543-496A-B5D9-687BE1690F60.png" height="376" width="428" />
+  <div>
+   升级：当要将新元素添加到整数集合里时，且新元素的类型比整数集合内所有的元素的类型都要长时，整数集合要进行升级；
+  </div>
+  <div>
+   升级新加入的元素一定在集合的开头或者末尾，扩容后要进行集合元素的复制；
+  </div>
+  <div>
+   升级可以提升整数集合的灵活性，可以尽可能的节约内存；
+  </div>
+  <div>
+   （不支持降级）
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>压缩链表：</h2>
+  <div>
+   是列表键和哈希键的底层实现之一，当一个列表键只包含少量列表项，且每个列表项是小整数或长度比较短的字符串，此时Redis就会使用压缩列表做列表键的底层实现；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/F9F5EF75-5710-4569-B197-56B2EE8C446C.png" height="564" width="1682" />
+  <div>
+   <br />
+  </div>
+  <div>
+   压缩链表的节点：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/D7DF0C3E-5E5C-4EC2-9208-335951D55194.png" height="76" width="890" />
+  <div>
+   previous_entry_length：以字节为单位记录前一个节点占了多少字节；（前一节点的长度小于254字节则用1字节长度空间来保存；前一节点的长度大于等于254字节则用5字节长的空间来保存）
+  </div>
+  <div>
+   encoding：记录节点的content属性保存数据的类型及长度；
+  </div>
+  <div>
+   content：保存节点的值，可以是字节数组或整数；
+  </div>
+  <div>
+   连锁更新问题；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>对象：</h2>
+  <div>
+   字段：
+  </div>
+  <ol>
+   <li>
+    <div>
+     type：类型；
+    </div></li>
+   <li>
+    <div>
+     encoding：编码方式；
+    </div></li>
+   <li>
+    <div>
+     ptr：指向实际对象的指针；
+    </div></li>
+   <li>
+    <div>
+     refcount：引用计数；
+    </div></li>
+   <li>
+    <div>
+     lru：最后使用的时间；（OBJECT IDLETIME指令查看）
+    </div></li>
+  </ol>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/22B329B5-D637-4608-882F-20341168D40D.png" height="436" width="578" />
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/3DAA0959-94D0-4254-8309-FC47CDB1D986.png" height="436" width="662" />
+  <div>
+   每种类型的对象都至少使用了两种不同的编码：（OBJECT ENCODING命令查看）
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/D774E62E-8F8C-4E90-A87F-A9718161C93C.png" height="746" width="1684" />
+  <div>
+   <br />
+  </div>
+  <h2>字符串对象：</h2>
+  <div>
+   字符串对象的编码可以是int、raw、或embstr；
+  </div>
+  <div>
+   字符串对象时Redis五种类型的对象中唯一一种会被其他四种类型对象嵌套的对象；
+  </div>
+  <div>
+   <br />
+  </div>
+  <table style="--en-fitwindow:false;border-left:1px solid #d9d9d9;border-top:1px solid #d9d9d9;border-collapse:collapse;width:753px;" width="753px">
+   <colgroup>
+    <col style="width: 77px;" />
+    <col style="width: 382px;" />
+    <col style="width: 294px;" />
+   </colgroup>
+   <tbody>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       类型
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       条件
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       备注
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       int
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       字符串对象保存整数值
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       raw
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       字符串对象保存字符串值，字符串值长度大于32字节
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       调用两次内存分配，分别创建redisObject和sdshdr
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       embstr
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       字符串对象保存字符串值，字符串值长度小于等于32字节
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       调用一次内存分配函数，分配一块连续的空间，依次包含redisObject和sdshdr
+      </div></td>
+    </tr>
+   </tbody>
+  </table>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/F237E1D0-C7A1-46F5-903C-DDDE9BB83A28.png" height="128" width="1098" />
+  <div>
+   <br />
+  </div>
+  <div>
+   Int和embstr编码的字符串在条件满足的时候可转换成raw；
+  </div>
+  <div>
+   向一个int编码的字符串APPEND一个字符串值的时候，会转换成raw；
+  </div>
+  <div>
+   修改embstr编码的字符串时，总会转换成raw，后再进行修改l；
+  </div>
+  <div>
+   <br />
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/ABDFE402-933D-4840-B094-2E43937E46BD.png" height="1632" width="1690" />
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>列表对象：</h2>
+  <div>
+   列表对象的编码可以是ziplist或linkedlist；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   ziplist编码的列表对象使用压缩列表作为底层实现；
+  </div>
+  <div>
+   条件：（两个条件的上限值可以通过配置文件修改）
+  </div>
+  <ol>
+   <li>
+    <div>
+     列表对象保存的所有字符串元素的长度都小于64字节；
+    </div></li>
+   <li>
+    <div>
+     列表对象保存的元素数量小于512个；
+    </div></li>
+  </ol>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/F6F4B958-8080-4BA1-950C-FD805997EF73.png" height="374" width="1486" />
+  <div>
+   <br />
+  </div>
+  <div>
+   linkedlist编码的列表使用双端列表作底层实现，每个双端链表节点都保存了一个字符串对象，而每个字符串对象都保存了一个列表元素；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/C880299F-8206-4D9E-9895-B63F16BBBB19.png" height="346" width="1630" />
+  <div>
+   <br />
+  </div>
+  <div>
+   列表命令实现：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/D57D3BFB-482D-4295-B57B-96C45C337B03.png" height="1446" width="1688" />
+  <div>
+   <br />
+  </div>
+  <h2>哈希对象：</h2>
+  <div>
+   哈希对象的编码可以是ziplist或hashtable；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   使用ziplist时，有新的键值对要加入哈希对象时，先将保存键的压缩列表节点推入到压缩列表表尾，再将保存值的节点推入到压缩列表表尾；
+  </div>
+  <div>
+   条件：
+  </div>
+  <ol>
+   <li>
+    <div>
+     所有键值对的键和值的字符串长度都小于64字节；
+    </div></li>
+   <li>
+    <div>
+     保存的键值对个数小于512；
+    </div></li>
+  </ol>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/653D3131-5B5C-410B-867F-76BC6D2990B0.png" height="402" width="690" />
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/ED93CECA-E770-4B63-BC1A-948454611DDE.png" height="188" width="1642" />
+  <div>
+   <br />
+  </div>
+  <div>
+   使用hashtable时：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/889351BE-66E1-4AAB-B6A7-2344FCAAA131.png" height="634" width="1006" />
+  <div>
+   <br />
+  </div>
+  <div>
+   命令实现：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/1EE7D2CC-7304-40D7-B6F4-87DA088F6083.png" height="1114" width="1692" />
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>集合对象：</h2>
+  <div>
+   集合对象的编码可以是intset或hashtable；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   使用intset时，
+  </div>
+  <div>
+   条件：
+  </div>
+  <ol>
+   <li>
+    <div>
+     集合对象保存的元素都是整数值；
+    </div></li>
+   <li>
+    <div>
+     集合对象保存的元素个数小于512；
+    </div></li>
+  </ol>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/681935E3-CE29-4F30-967A-8F45AF98FC8F.png" height="356" width="1234" />
+  <div>
+   <br />
+  </div>
+  <div>
+   使用hashtable时，
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/B3E0D4E7-6FD8-4754-B224-AA39001AEAF6.png" height="386" width="916" />
+  <div>
+   <br />
+  </div>
+  <div>
+   命令实现：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/4D333DF2-F4B7-4842-AC0C-9E711A9E96A9.png" height="1056" width="1686" />
+  <div>
+   <br />
+  </div>
+  <h2>有续集合对象：</h2>
+  <div>
+   编码可以是ziplist或skiplist；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   使用ziplist时，每个集合元素使用两个紧挨在一起的压缩列表节点保存，第一个存储值，第二个存储得分；
+  </div>
+  <div>
+   条件：
+  </div>
+  <ol>
+   <li>
+    <div>
+     元素数量小于128；
+    </div></li>
+   <li>
+    <div>
+     所有元素成员的长度都小于64字节；
+    </div></li>
+  </ol>
+  <div>
+   <br />
+  </div>
+  <div>
+   使用skiplist时，使用zset结构作为底层实现，一个zset结构同时包含一个字典和一个跳跃表；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/88308505-377E-4EA8-B3B1-124235EED1A7.png" height="428" width="862" />
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/254574D7-E4CA-4D78-AAED-DCA6EBC5BC7B.png" height="938" width="1642" />
+  <div>
+   字典结构的键是对象，值是得分；
+  </div>
+  <div>
+   跳表结构的object保存对象，score保存得分；
+  </div>
+  <div>
+   字典和跳表的对象和得分都共享指针，不会有重复对象；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   命令实现：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/63387774-1BB3-4492-A99D-5E5F652FCC6E.png" height="1482" width="1682" />
+  <div>
+   <br />
+  </div>
+  <div>
+   Redis只对包含整数值对字符串对象进行共享，因为对比包含字符串值的字符串对象的时间复杂度较高，会消耗cpu资源；
+  </div>
+  <h1>第二部分 单机数据库的实现</h1>
+  <h2>一、数据库</h2>
+  <div>
+   Redis服务器将所有数据库都保存在服务器状态redis.h/redisServer结构的db数组中，db数组的每个项都是一个redis.h/redisDb结构，每个redisDb结构代表一个数据库；
+  </div>
+  <div>
+   初始化服务器时会根据dbnum属性决定创建多少个数据库，dbnum属性由database选项决定，默认是16；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   默认情况下，Redis客户端的目标数据库是0号数据库，可以通过SELECT指令切换目标数据库；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/853685B6-66D9-44B1-90AA-05A27FBFA451.png" height="560" width="972" />
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   Redis是键值对数据库服务器，其中redisDb的dict字典存储了数据库中所有的键值对，将这个字典称作键空间；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/BC0467E6-FBA3-4FB2-A775-A4A0896FEF1F.png" height="840" width="1612" />
+  <div>
+   <br />
+  </div>
+  <div>
+   通过EXPIRE和PEXPPIRE命令，可以以秒或毫秒精度为数据库中的某个键设置生存时间；
+  </div>
+  <div>
+   通过EXPIREAT和PEXPIREAT命令，可以以秒或毫秒精度为数据库中的某个键设置过期时间；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/2579846A-C858-4F60-AF52-0AB7B0C2C589.png" height="316" width="454" />
+  <div>
+   这几个命令底层都是转换成PEXPIREAT进行实现；
+  </div>
+  <ul>
+   <li>
+    <div>
+     PERSIST命令可以移除一个键的过期时间；
+    </div></li>
+   <li>
+    <div>
+     TTL命令以秒为单位返回键的剩余生存时间，PTTL命令以毫秒为单位返回键的剩余生存时间；
+    </div></li>
+  </ul>
+  <div>
+   <br />
+  </div>
+  <div>
+   redisDb结构的expires字典保存了数据库中所有键的过期时间，称这个字典——过期字典；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/79E642CD-C150-4492-A5FC-D4AF2FCA7A7B.png" height="1150" width="1516" />
+  <div>
+   dict和expires的键对象也是指向同一个对象（图中是为了表示方便），不会有空间浪费；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   过期键删除策略：
+  </div>
+  <ul>
+   <li>
+    <div>
+     定时删除：设置键的过期时间的同时，创建一个定时器，让定时器在键的过期时间来临时，立即执行对键的删除操作；（对内存友好，对cpu不友好）时间事件的实现方式是无需链表，查找事件的时间复杂度是O(N)；
+    </div></li>
+   <li>
+    <div>
+     惰性删除：放任过期不管，每次从键空间获取键时，检查是否过期，来决定是否删除；（cpu友好，内存不友好）
+    </div></li>
+   <li>
+    <div>
+     定时删除：每隔一段时间，检查数据库，删除过期键，删除过期键的个数和要检查多少个数据库由算法决定；
+    </div></li>
+  </ul>
+  <div>
+   <br />
+  </div>
+  <div>
+   RDB持久化，在执行SAVE或BGSAVE命令时，程序会对数据库中的键进行检查，已过期的键不会被保存到新创建的RDB文件。载入RDB文件时，若服务器是主服务器，载入RDB文件时，会对文件中保存的键进行检查，忽略过期的键；若服务器是从服务器，则不会检查，无论是否过期都会载入数据库，但在主从数据同步的时候，从数据库的数据会被清空，因此过期键对载入RDB文件的从服务器也不会产生影响；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   AOF持久化，AOF文件不会因为未删除的过期键而产生任何影响，当过期键被惰性删除或定期删除后，程序会向AOF文件追加一条DEL文件，显式记录该键已被删除；
+  </div>
+  <div>
+   AOF文件重写时，程序会进行检查，已过期的键不会写入AOF文件；
+  </div>
+  <div>
+   主服务器控制从服务器统一删除过期的键，保证主从一致；
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>二、RDB持久化</h2>
+  <div>
+   保存数据库中的键值对来记录数据库状态的不同；
+  </div>
+  <div>
+   RDB的载入是在服务器启动时自动执行的，Redis没有专门用于载入RDB文件的命令；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   SAVE命令可以生成RDB文件，该命令会阻塞Redis服务器进程，直到RDB文件创建完毕为止；
+  </div>
+  <div>
+   BGSAVE命令也可以生成RDB文件，会派生出一个子进程，子进程负责创建RDB文件，服务器进程（父进程）继续处理命令请求；
+  </div>
+  <div>
+   <br />
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/45C4CC6B-FAA7-489F-85D1-B7FB2F773813.png" height="508" width="670" />
+  <div>
+   优先使用AOF持久护功能；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   BGSAVE指令执行期间，服务器拒绝SAVE和BGREWRITEAOF（在BGSAVE执行完毕后执行）；
+  </div>
+  <div>
+   <br />
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/B282D995-EB20-4F71-8436-8DDFCEF7F316.png" height="470" width="1310" />
+  <div>
+   saveparams：自动保存参数；
+  </div>
+  <div>
+   dirty：上次保存到现在数据变更次数；
+  </div>
+  <div>
+   lastsave：上次执行保存操作的时间；
+  </div>
+  <div>
+   （Redis每隔100ms检查一次save设置的保存条件是否满足）
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   RDB文件结构：
+  </div>
+  <div>
+   <br />
+  </div>
+  <table style="--en-fitwindow:false;border-left:1px solid #d9d9d9;border-top:1px solid #d9d9d9;border-collapse:collapse;width:811px;" width="811px">
+   <colgroup>
+    <col style="width: 130px;" />
+    <col style="width: 130px;" />
+    <col style="width: 140px;" />
+    <col style="width: 411px;" />
+   </colgroup>
+   <tbody>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       结构
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       大小
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       值
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       用途
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       REDIS
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       5字节
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       ”REDIS“
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       快速检查载入的文件是否是RDB文件
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       db_version
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       4字节
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       字符串表示的整数
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       记录RDB文件的版本号
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       databases
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       包含零个或多个数据库，以及各个数据库中的键值对数据
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       EOF
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       1字节
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       标志RDB正文结束
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       check_sum
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       8字节
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       无符号整数
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       前四部分计算得出的校验和，检查RDB文件是否存坏
+      </div></td>
+    </tr>
+   </tbody>
+  </table>
+  <div>
+   每个非空数据库在RDB文件中都可以保存为SELECTDB（1字节）、db_number（1、2、5字节，保存数据库号码）、key_value_pairs（保存数据库所有键值对数据）三部分；
+  </div>
+  <div>
+   <br />
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/FFCC66D8-A8E6-42AB-AA18-5963BEA499F9.png" height="70" width="1664" />
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/6AECEC8B-E5B9-4358-9B7A-ADE241B133FE.png" height="70" width="876" />
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>三、AOF持久化</h2>
+  <div>
+   保存Redis服务器所执行的写命令来记录数据库状态；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   AOF持久化功能的实现分成命令追加、文件写入、文件同步三个步骤；
+  </div>
+  <ul>
+   <li>
+    <div>
+     命令追加：服务器执行完写命令后，会以协议格式将被执行的写命令添加到服务器状态的aof_buf缓冲区的末尾；
+    </div></li>
+   <li>
+    <div>
+     文件写入和同步：Redis的服务器进程是一个事件循环，文件事件负责接收客户端的命令请求，并发送回复，时间事件负责执行需要定时的函数；
+    </div></li>
+  </ul>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/D9CB4998-AF45-4C7C-AEA9-3C9EE6A7317D.png" height="492" width="1776" />
+  <div>
+   默认everysec；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   AOF重写：
+  </div>
+  <div>
+   实现原理：Redis从数据库中读取现在的值，然后用一条命令去记录键值对，代替之前记录这个键值对的多条命令；
+  </div>
+  <div>
+   处理列表、哈希表、集合、有序集合时，若一个集合键包含了超过64个元素，会用多条SADD指令记录这个集合，每条指令设置的元素数量是64个；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   Redis使用子进程来进行aof重写，重写期间，主进程需要：
+  </div>
+  <ol>
+   <li>
+    <div>
+     执行客户端发来的命令；
+    </div></li>
+   <li>
+    <div>
+     将执行后的命令追加到AOF缓冲区；
+    </div></li>
+   <li>
+    <div>
+     将执行后的命令追加到AOF重写缓冲区；
+    </div></li>
+  </ol>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/9D325825-E3D9-4436-ABA1-A0E15606A07B.png" height="382" width="1036" />
+  <div>
+   子进程写完向服务器进程发送信号后，服务器进程会将保存在AOF缓冲区的命令追加到AOF文件的末尾；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>四、事件</h2>
+  <div>
+   文件事件：对套接字操作的抽象，当套接字变成可应答、可读、可写时，相应的文件事件就会出现；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/8CF933CF-C575-4CE2-8BF5-110913611E24.png" height="688" width="908" />
+  <div>
+   当一个套接字准备好执行连接应答、写入、读取、关闭等操作时，就会产生一个文件事件，多个文件事件可能并发的出现，I/O多路复用程序将所有产生事件的套接字放在一个队列里，以有序、同步每次一个套接字的方式向事件分配器传送套接字；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/2563C88A-FE78-4362-8AA3-019D412E9931.png" height="174" width="1510" />
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/FD1407F2-CD65-4EAF-9916-D8F9BB12C949.png" height="288" width="844" />
+  <div>
+   一个套接字又可读又可写的时候，服务器先读套接字，后写套接字。
+  </div>
+  <div>
+   <br />
+  </div>
+  <ul>
+   <li>
+    <div>
+     连接应答处理器
+    </div></li>
+  </ul>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/CE30BC80-8380-48DE-9DAB-E7AD273C0DE8.png" height="256" width="926" />
+  <ul>
+   <li>
+    <div>
+     命令请求处理器
+    </div></li>
+  </ul>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/528839AA-5FB9-4423-94E8-66979169E18C.png" height="256" width="926" />
+  <ul>
+   <li>
+    <div>
+     命令回复处理器
+    </div></li>
+  </ul>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/550D700A-0CEE-4904-80F3-E24D0F9204E7.png" height="256" width="860" />
+  <ul>
+   <li>
+    <div>
+     一次完整的客户端与服务器连接事件实例
+    </div></li>
+  </ul>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/EB7AB788-C4B7-453E-8D94-1086168177BC.png" height="536" width="766" />
+  <div>
+   <br />
+  </div>
+  <div>
+   时间事件：定时事件、周期事件
+  </div>
+  <div>
+   服务器将所有的时间事件放到一个无序链表中，每当时间事件执行器运行时，遍历链表查找已到达的时间事件，调用相应的事件处理器；（正常模式中使用serverCron一个时间事件、benchmark模式下只使用两个时间事件，因此无序链表并不影响性能）
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   serverCron函数工作：
+  </div>
+  <ul>
+   <li>
+    <div>
+     更新服务器的各类统计信息，比如时间信息、内存占用、数据库占用情况等；
+    </div></li>
+   <li>
+    <div>
+     清理数据库中的过期键值对；
+    </div></li>
+   <li>
+    <div>
+     关闭和清理连接失效的客户端；
+    </div></li>
+   <li>
+    <div>
+     尝试进行AOF或RDB持久化操作；
+    </div></li>
+   <li>
+    <div>
+     若服务器是主服务器，那么对从服务器进行定期同步；
+    </div></li>
+   <li>
+    <div>
+     如果处于集群模式，对集群进行定期同步和连接测试；
+    </div></li>
+  </ul>
+  <div>
+   <br />
+  </div>
+  <div>
+   事件调度：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/573CDB18-5640-45D7-AA6C-1924EE1ED9E5.png" height="656" width="854" />
+  <div>
+   服务器在处理完文件事件时，若还没有时间事件到达，则继续处理文件事件，随着文件事件的执行，时间到达有时间事件触发，这时开始处理时间事件；（因此时间事件的处理时间通常会比设定的到达时间晚一些）
+  </div>
+  <div>
+   处理事件的过程时同步、有序、原子的，不会抢占，若某个事件执行事件过长，为了防止饥饿，事件会主动让出执行权，对于耗时的持久化操作会放在子线程或子进程执行；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>五、客户端</h2>
+  <div>
+   服务器为连接的客户端建立了相应的redisClient结构（客户端状态），保存客户端状态信息，及执行相关功能时需要用到的数据结构；
+  </div>
+  <div>
+   Redis服务器状态结构的clients属性是一个链表，保存所有与服务器连接的客户端的状态结构：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/25C2D8D3-C4CE-43C2-84B8-B328067A4E3E.png" height="264" width="1474" />
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <table style="--en-fitwindow:false;border-left:1px solid #d9d9d9;border-top:1px solid #d9d9d9;border-collapse:collapse;width:1577px;" width="1577px">
+   <colgroup>
+    <col style="width: 283px;" />
+    <col style="width: 109px;" />
+    <col style="width: 92px;" />
+    <col style="width: 206px;" />
+    <col style="width: 94px;" />
+    <col style="width: 793px;" />
+   </colgroup>
+   <tbody>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       字段名
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       含义
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       内容
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       功能
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       查看指令
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       备注
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       fd
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       套接字描述符
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       -1或大于-1的数
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       记录客户端正在使用的套接字描述符
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       CLENT list
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       伪客户端（载入AOF文件、执行Lua脚本中包含的Redis命令）的fd是-1，普通客户端的fd是大于-1的整数
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       name
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       名字
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       记录客户端名字
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       CLENT list
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       默认没有名字，需要设置（CLENT setname）
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       flags
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       标志
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       记录客户端的角色及所处的状态
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       sds querybuf
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       输入缓冲区
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       SDS值
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       保存客户端发送的命令请求
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       其大小会根据输入内容动态的扩大或缩小，但不能超过1GB，否则服务器会关闭这个客户端
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       robj **argv
+      </div>
+      <div>
+       Int argc
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       命令与命令参数
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       数组
+      </div>
+      <div>
+       int
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       记录命令参数及命令参数的个数
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;"><img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/942BECC0-3013-4CF9-B144-A655A9FB511A.png" height="384" width="1242" /></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       redisCommand *cmd
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       命令执行函数
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       cmd
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;"><img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/98219673-C45B-4299-9562-56521EB298A4.png" height="546" width="1558" /></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       固定大小：
+      </div>
+      <div>
+       char buf[REDIS_REPLY_CHUNK_BYTES]
+      </div>
+      <div>
+       int bufpos
+      </div>
+      <div>
+       <br />
+      </div>
+      <div>
+       可变大小：
+      </div>
+      <div>
+       List *reply
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       输出缓冲区
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       执行命令所得的命令回复会被保存到输出缓冲区，每个客户端都有两个输出缓冲区可用，一个大小固定（16kb），一个大小可变（硬性限制/软性限制）
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;"><img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/30070A3C-8B96-4E22-BC26-06A28F2C927D.png" height="346" width="950" /><img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/310E3DD1-9E6D-479E-94E9-179FD909DE9E.png" height="218" width="1416" /></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       int authenticated
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       身份验证
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       int
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       记录客户端是否通过了身份验证
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       0-&gt;未通过
+      </div>
+      <div>
+       1-&gt;通过
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       ctime
+      </div>
+      <div>
+       lastinteraction
+      </div>
+      <div>
+       ob
+       <span style="font-family: unset;">ug_soft_limit_reached_time</span>
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       时间
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <ul>
+       <li>
+        <div>
+         计算客户端和服务器连接了多少秒；
+        </div></li>
+       <li>
+        <div>
+         客户端与服务器最后一次进行互动的时间；
+        </div></li>
+       <li>
+        <div>
+         输出缓冲区第一次到达软性限制的时间
+        </div></li>
+      </ul>
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       <br />
+      </div></td>
+    </tr>
+   </tbody>
+  </table>
+  <div>
+   硬性限制：
+  </div>
+  <div>
+   输出缓冲区超过了硬性限制的大小，立即关闭；
+  </div>
+  <div>
+   软性限制：
+  </div>
+  <div>
+   超过软性限制大小，但没超过软性限制，记录到达软性限制的起止时间，若一直超出软性限制，且持续时长超过设定市场则关闭客户端；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <span style="font-family: unset;">设置指令：</span>
+  </div>
+  <ul>
+   <li>
+    <div>
+     设置普通客户端：client-buffer-limit normal 0 0 0
+    </div></li>
+   <li>
+    <div>
+     设置从服务器客户端：client-buffer-limit slave 256mb 64mb 60
+    </div></li>
+   <li>
+    <div>
+     设置将执行发布与订阅客户端:client-buffer-limit pubsub 0 0 0
+    </div></li>
+  </ul>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>六、服务器</h2>
+  <div>
+   <br />
+  </div>
+  <div>
+   命令执行步骤：
+  </div>
+  <ol>
+   <li>
+    <div>
+     查找命令实现：根据客户端状态的argv[0]参数，在命令表中查找参数所指定的命令，并将找到的命令保存到客户端状态的cmd属性里；
+    </div></li>
+   <li>
+    <div>
+     执行预备操作：校验参数、鉴权、校验服务器状态等；
+    </div></li>
+   <li>
+    <div>
+     调用命令等实现函数：前面的操作已经把将要执行命令的实现保存到了客户端状态的cmd里，将命令的参数保存到了客户端状态的argv里，将命令的参数个数保存到了客户端状态的argv里，接下来只需要执行
+     <span style="font-family: unset;">client-&gt;cmd-&gt;proc(client)即可；</span>
+    </div></li>
+   <li>
+    <div>
+     执行后续工作：慢查询日志功能、根据指令耗费时长更新redisCommand的milliseconds属性、AOF持久化、主从复制；
+    </div></li>
+   <li>
+    <div>
+     将命令回复发送给客户端：服务器将命令回复保存在客户端的输出状态缓冲区，并为客户端的套接字关联命令回复处理器，当客户端的套接字编程可写状态时，执行命令回复处理器，将保存在缓冲区的命令回复发送给客户端；
+    </div></li>
+  </ol>
+  <div>
+   <br />
+  </div>
+  <div>
+   serverCron函数：（每隔100ms执行一次，负责管理服务器的资源）
+  </div>
+  <ol>
+   <li>
+    <div>
+     更新服务器时间缓存；
+    </div></li>
+   <li>
+    <div>
+     更新LRU时钟；
+    </div></li>
+   <li>
+    <div>
+     更新服务器每秒执行命令次数；
+    </div></li>
+   <li>
+    <div>
+     更新服务器内存峰值记录；
+    </div></li>
+   <li>
+    <div>
+     处理SIGTERM信号；（关闭服务器，并在关闭前进行RDB持久化操作）
+    </div></li>
+   <li>
+    <div>
+     管理客户端资源；
+    </div></li>
+   <li>
+    <div>
+     管理数据库资源；
+    </div></li>
+   <li>
+    <div>
+     执行被延迟的BGREWRITEOF；
+    </div></li>
+   <li>
+    <div>
+     检查持久化操作的运行状态；
+    </div></li>
+   <li>
+    <div>
+     将AOF缓冲区中的内容写入AOF文件
+    </div></li>
+   <li>
+    <div>
+     关闭输出缓冲区大小超出限制的客户端
+    </div></li>
+   <li>
+    <div>
+     增加cronloops（记录serverCron函数执行次数）计数器
+    </div></li>
+  </ol>
+  <div>
+   <br />
+  </div>
+  <div>
+   初始化服务器：
+  </div>
+  <ul>
+   <li>
+    <div>
+     初始化服务器状态结构（调用initServerConfig函数）
+    </div></li>
+   <ol>
+    <li>
+     <div>
+      设置服务器的运行ID；
+     </div></li>
+    <li>
+     <div>
+      设置服务器的默认运行频率；
+     </div></li>
+    <li>
+     <div>
+      设置服务器的默认文件路径；
+     </div></li>
+    <li>
+     <div>
+      设置服务器的运行架构；
+     </div></li>
+    <li>
+     <div>
+      设置服务器的默认RDB持久化条件和AOF持久化条件；
+     </div></li>
+    <li>
+     <div>
+      初始化服务器的LRU时钟；
+     </div></li>
+    <li>
+     <div>
+      创建命令表；
+     </div></li>
+   </ol>
+   <li>
+    <div>
+     载入配置选项（redis.conf文件）：默认端口6379，默认数据库数量16
+    </div></li>
+   <li>
+    <div>
+     初始化服务器数据结构（调用initServer函数）
+    </div></li>
+   <li>
+    <div>
+     还原数据库状态：载入RDB文件或AOF文件，根据文件记录的内容还原服务器的数据库状态
+    </div></li>
+   <li>
+    <div>
+     执行事件循环
+    </div></li>
+  </ul>
+  <div>
+   <br />
+  </div>
+  <h1>第三部分 多机数据库的实现</h1>
+  <h2>一、复制</h2>
+  <div>
+   同步：将从服务器的数据库状态更新至主服务器当前所处的数据库状态；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/FE514A30-0F84-4050-B382-6F1598B228A6.png" height="258" width="510" />
+  <div>
+   部分重同步：从服务器掉线重连后的同步操作；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/04F8537A-0A81-4539-8477-11F9CD07899C.png" height="320" width="706" />
+  <div>
+   实现：
+  </div>
+  <ol>
+   <li>
+    <div>
+     主从服务器的复制偏移量：主从服务器分别维护一个复制偏移量，记录主从同步情况；
+    </div></li>
+   <li>
+    <div>
+     主服务器的复制积压缓冲区：固定大小（1mb）的先入先出队列，若掉线期间需要同步的指令溢出了缓冲区则需要全量复制，否则可以将缓冲区的数据同步给从服务器，缓冲区的大小设置成（2*短线重连所需时间（s）*主服务器平均每秒产生的写命令数量）合适；
+    </div></li>
+   <li>
+    <div>
+     服务器的运行ID：记录是否是主从服务器关系；
+    </div></li>
+  </ol>
+  <div>
+   PSYNC指令执行：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/3CA3BD5F-A8D0-43A8-A1D3-85891F6D346D.png" height="1008" width="1282" />
+  <div>
+   <br />
+  </div>
+  <div>
+   命令传播：主服务器将造成主从服务器不一致的写命令传播至从服务器，使主从服务器再次回到一致状态；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   复制的实现：
+  </div>
+  <div>
+   向从服务器发送SLAVEOF指令，可以让一个从服务器去复制一个主服务器，复制的步骤如下：
+  </div>
+  <ol>
+   <li>
+    <div>
+     设置主服务器的地址和端口；
+    </div></li>
+   <li>
+    <div>
+     建立套接字连接；
+    </div></li>
+   <li>
+    <div>
+     从服务器向主服务器发送PING命令；
+    </div></li>
+   <li>
+    <div>
+     身份验证；
+    </div></li>
+   <li>
+    <div>
+     从服务器向主服务器发送监听端口号；
+    </div></li>
+   <li>
+    <div>
+     从服务器向主服务器发送PSYNC命令，执行同步操作；
+    </div></li>
+   <li>
+    <div>
+     命令传播；
+    </div></li>
+  </ol>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/EB028DF9-FEF0-4469-8657-37F29C6A3800.png" height="1056" width="1106" />
+  <div>
+   <br />
+  </div>
+  <div>
+   心跳检测：
+  </div>
+  <div>
+   命令传播阶段，从服务器默认以每秒一次的频率，向主服务器发送命令，作用如下：
+  </div>
+  <ol>
+   <li>
+    <div>
+     检测主从服务器的网络连接状态；
+    </div></li>
+   <li>
+    <div>
+     辅助实现mini-slaves选项；（防止主服务器在不安全的情况下执行写命令）
+    </div></li>
+   <li>
+    <div>
+     检测命令丢失；
+    </div></li>
+  </ol>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h2>二、Sentinel（哨兵）</h2>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/9F517920-7EB6-4257-ABDC-0991840F0E91.png" height="660" width="914" />
+  <div>
+   Sentinel服务器启动：
+  </div>
+  <ul>
+   <li>
+    <div>
+     初始化服务器：Sentinel本质上只是一个运行在特殊模式下的Redis服务器
+    </div></li>
+  </ul>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/8AB20846-3002-4148-B02B-7F55ACC8C3EF.png" height="1022" width="1778" />
+  <ul>
+   <li>
+    <div>
+     使用Sentinel专用代码：将一部分普通Redis服务器使用的代码替换成Sentinel专用代码；
+    </div></li>
+   <li>
+    <div>
+     初始化Sentinel状态：初始化sentinelState结构，保存服务器中所有和Sentinel功能有关的状态；
+    </div></li>
+   <li>
+    <div>
+     初始化Sentinel状态的master属性，masters字典记录了所有被Sentinel监视的主服务器的相关信息；
+    </div></li>
+   <li>
+    <div>
+     创建连向主服务器的网络连接，命令连接、订阅连接
+    </div></li>
+  </ul>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   获取主服务器信息：
+  </div>
+  <div>
+   Sentinel默认以每10s一次的频率，通过命令连接向监视的主服务器发送INFO命令，并通过分析INFO命令的回复获取主服务器的当前信息，包括主服务器本身信息和从服务器信息
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/0FD67B07-3353-4545-9BEA-BBB1EA91FE59.png" height="1014" width="1772" />
+  <div>
+   <br />
+  </div>
+  <div>
+   获取从服务器信息：
+  </div>
+  <div>
+   Sentinel创建连接到从服务器的命令连接和订阅连接，默认10s一次向从服务器发送INFO指令，得到以下信息：
+  </div>
+  <ul>
+   <li>
+    <div>
+     从服务器的运行ID
+    </div></li>
+   <li>
+    <div>
+     从服务器的角色
+    </div></li>
+   <li>
+    <div>
+     从服务器的IP地址，一起主服务器的端口号
+    </div></li>
+   <li>
+    <div>
+     从服务器的连接状态
+    </div></li>
+   <li>
+    <div>
+     从服务器的优先级
+    </div></li>
+   <li>
+    <div>
+     从服务器的复制偏移量
+    </div></li>
+  </ul>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/3523478C-820A-4766-9167-CE255AD38482.png" height="624" width="938" />
+  <div>
+   <br />
+  </div>
+  <div>
+   向主服务器和从服务器发送信息：
+  </div>
+  <div>
+   默认Sentinel以2s一次的频率，通过命令连接向所有被监视的主服务器和从服务器的__sentinel__:hello频道发送命令；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   接收来自主服务器和从服务器的频道信息
+  </div>
+  <div>
+   通过订阅连接接收__sentinel__:hello频道的信息；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/E5D32FF0-F4B3-4AF2-A71E-C5C629158AAB.png" height="334" width="938" />
+  <div>
+   <br />
+  </div>
+  <div>
+   更新sentinels字典
+  </div>
+  <div>
+   Sentinel为主服务器创建的实例结构中的sentinels字典保存了除Sentinel本身外，所有同样监控这个主服务器的其他Sentinel的资料；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/2353D722-EF4D-46CD-942A-A6CC9BA5ACF0.png" height="838" width="1600" />
+  <div>
+   创建连向其他Sentinel的命令连接
+  </div>
+  <div>
+   当Sentinel通过频道信息发现一个新的Sentinel时，会为新Sentinel在字典中创建实例结构，还会创建一个连向新Sentinel的命令连接，新Sentinel也会创建连向这个Sentinel的命令连接，最终监视同一个主服务器的多个Sentinel将形成互相连接的网络；
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/4A160168-5128-4207-99CD-4FEFEDC86DCA.png" height="636" width="638" />
+  <div>
+   <br />
+  </div>
+  <div>
+   检测主观下线状态：
+  </div>
+  <div>
+   默认Sentinel会以1s一次的频率向所有与它创建命令连接的实例发送PING请求，判断实例是否在线；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   检查客观下线状态：
+  </div>
+  <div>
+   Sentinel将一个主服务器判断主观下线后，会询问其他Sentinel，若接受到足够数量的下线判断后，Sentinel会将从服务器判定成客观下线，并对主服务器执行故障转移操作；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   选举领头Sentinel
+  </div>
+  <div>
+   当一个主服务器判定成客观下线后，监视这个下线主服务器的各个Sentinel根据规则选举一个领头Sentinel进行故障迁移；（先到先得）
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   重新选取主服务器
+  </div>
+  <div>
+   领头Sentinel将所有从服务器保存到一个列表，筛选：
+  </div>
+  <ol>
+   <li>
+    <div>
+     删除下线或断线的从服务器
+    </div></li>
+   <li>
+    <div>
+     删除5s内没回复过领头Sentinel的从服务器
+    </div></li>
+   <li>
+    <div>
+     删除所有与以下线主服务器连接断开超过down-after-millisecond*10s的从服务器
+    </div></li>
+   <li>
+    <div>
+     根据优先级排序
+    </div></li>
+   <li>
+    <div>
+     根据从服务器的复制偏移量排序
+    </div></li>
+   <li>
+    <div>
+     选去运行ID最小的从服务器
+    </div></li>
+  </ol>
+  <div>
+   <br />
+  </div>
+  <h2>三、集群</h2>
+  <div>
+   集群是Redis提供的分布式数据库方案，集群通过分片来进行数据共享，并提供复制和故障转移功能。
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   集群数据结构：
+  </div>
+  <div>
+   clusterNode记录自己的状态：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/FD8DF547-A299-4AC1-87C9-43017C61B459.png" height="898" width="970" />
+  <div>
+   clusterLink记录连接节点所需的有关信息：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/9260BF2E-1A0E-4B94-B74F-48A8A5947653.png" height="540" width="934" />
+  <div>
+   clusterState记录在当前节点的视角下，集群目前所处的状态：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/FA4DECDF-795C-4CF2-B306-51E263B666A4.png" height="622" width="976" />
+  <div>
+   整体存储情况：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/A1A9BFEE-1201-40AE-93D9-13701757C015.png" height="1642" width="1178" />
+  <div>
+   节点的握手过程：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/469BE620-EDD0-4917-B7D3-5D852ACADB81.png" height="256" width="934" />
+  <div>
+   <br />
+  </div>
+  <div>
+   集群的整个数据库被分成16384个槽，每个键都属于这16384槽中的一个，节点使用
+  </div>
+  <ol>
+   <li>
+    <div>
+     clusterNode.slots数组保存该节点处理哪些槽（位图，处理的槽置一）；
+    </div></li>
+   <li>
+    <div>
+     slotsnum记录处理槽的个数；
+    </div></li>
+   <li>
+    <div>
+     clusterStates.slots数组记录集群中16384个槽的指派信息，每个数组项都是一个指向clusterNode的指针；
+    </div></li>
+  </ol>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/0DF04DB5-E079-4574-9935-1106734327DC.png" height="660" width="1266" />
+  <div>
+   <br />
+  </div>
+  <p>给节点添加处理槽的指令：CLUSTER ADDSLOTS &lt;slot&gt; [slot … ]</p>
+  <p><br /></p>
+  <div>
+   槽分配算法：CRC16(key) &amp; 16383
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   槽重新分片的流程：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/91C6F343-68B0-46EE-B887-A4AFB320588C.png" height="752" width="698" />
+  <div>
+   <br />
+  </div>
+  <div>
+   ASK错误、MOVED错误：
+  </div>
+  <ul>
+   <li><p>ASK错误：节点正在进行重新分配，一部分的key移动到目标节点，一部分没有。若需要查找的key已经移动到目标节点，则会返回ASK错误指引客户端到负责该key的节点；是一种临时措施，客户端只会在接下来的一次命令请求中将关于槽i的请求发送至ASK所指示的节点；（cluster.migrating_slots_to记录正在迁移至其他节点的槽）</p></li>
+   <li><p>MOVED错误：指客户端请求的key不由当前节点负责，指引客户端到负责该key的节点；</p></li>
+  </ul>
+  <p><br /></p>
+  <div>
+   向节点发送命令：CLUSTER REPLICATE &lt;node_id&gt;，可以让接收命令的节点成为node_id所指定节点的从节点；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   集群中的每个节点都会定期向集群中的其他节点发送PING消息，检测对方是否在线；
+  </div>
+  <div>
+   若半数以上的节点认为该节点下线，则需要从其从节点中重新选取主节点，主节点的选取方式和Sentinel的方式类似，都是基于Raft算法的领头选举，下线节点的从节点向其他主节点请求成为新的主节点，其他主节点向第一个请求到达的从节点投票，若某个从节点所得票数过半，则成为新的主节点；
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   消息：
+  </div>
+  <table style="--en-fitwindow:false;--en-headInfos:[{&quot;style&quot;:{},&quot;text&quot;:&quot;消息类型&quot;,&quot;cellStyle&quot;:{&quot;height&quot;:30},&quot;countType&quot;:&quot;count&quot;},{&quot;style&quot;:{},&quot;text&quot;:&quot;用途&quot;,&quot;cellStyle&quot;:{&quot;height&quot;:30},&quot;countType&quot;:&quot;count&quot;},{&quot;style&quot;:{},&quot;text&quot;:&quot;消息正文&quot;,&quot;cellStyle&quot;:{&quot;height&quot;:30},&quot;countType&quot;:&quot;count&quot;}];--en-showCount:false;--en-type:smarttable;border-left:1px solid #d9d9d9;border-top:1px solid #d9d9d9;border-collapse:collapse;width:683px;" width="683px">
+   <colgroup>
+    <col style="width: 190px;" />
+    <col style="width: 190px;" />
+    <col style="width: 303px;" />
+   </colgroup>
+   <thead>
+    <tr style="--en-compatible:true">
+     <td>消息类型</td>
+     <td>用途</td>
+     <td>消息正文</td>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613690;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       MEET消息
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613692;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       当发送者接到客户端发送的CLUSTER MEET请求时，发送者会向接受者发送MEET消息，请求接受者加入到发送者所处的集群中
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613696;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       发送者从自己的已知节点列表中随机选取两个节点，分别保存在两个clusterMsgDataGossip结构中；
+      </div>
+      <div>
+       Gossip协议；
+      </div><img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/56EBA0D6-FCCE-4D66-BF8D-DC6C54FAE86A.png" height="638" width="746" /></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613701;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       PING消息
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613703;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       集群中每个节点每隔1s随机选取5个节点，选取最长时间没有发送过PING消息的节点发送PING消息，检测节点是否在线
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613707;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       同上
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613711;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       PONG消息
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613714;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       接受者收到MEET或PING消息时，回复PONG表示已收到；一个节点也可以通过向集群广播PONG消息，刷线其他节点关于这个节点的的认识
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613718;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       同上
+      </div></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613722;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       FAIL消息
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613724;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       当一个主节点A判断另一个主节点B进入FAIL状态时，A会广播一条B的FAIL消息，所有收到消息的节点会将B标记成下线
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613729;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;"><img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/1F323B5F-FAFD-46B9-BEA4-08E5B97EF6FF.png" height="166" width="746" /></td>
+    </tr>
+    <tr>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613733;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       PUBLISH消息
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613735;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;">
+      <div>
+       当节点收到PUBLISH消息时，节点会执行命令，那个广播该消息，所有收到消息的节点都会执行该消息
+      </div></td>
+     <td style="--en-typeInfo:{&quot;type&quot;:&quot;text&quot;,&quot;data&quot;:{}};--en-createTime:1665218613739;--en-createMember:fix me here;border-right:1px solid #d9d9d9;border-bottom:1px solid #d9d9d9;padding:10px;"><img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/13B8D6EB-87C9-4C2C-85A3-AE19E2FF8A57.png" height="326" width="650" /></td>
+    </tr>
+   </tbody>
+  </table>
+  <div>
+   消息头：
+  </div>
+  <img src="/Redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0.resources/D13E40A7-0FD8-492E-8F4B-6E14737C8590.png" height="1344" width="1180" />
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <h1>第四部分 独立功能的实现</h1>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+  <div>
+   <br />
+  </div>
+ </body>
+</html></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://example.com">bank</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2023/07/30/redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/">http://example.com/2023/07/30/redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">bank blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2023/07/30/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%AF%B9%E6%AF%94/" title="消息队列对比"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">消息队列对比</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">bank</div><div class="author-info__description">行至水穷处,坐看云起时</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">第一部分 数据结构和对象</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.1.</span> <span class="toc-text">SDS：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.2.</span> <span class="toc-text">链表：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.3.</span> <span class="toc-text">字典：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.4.</span> <span class="toc-text">哈希表（dictht）：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.5.</span> <span class="toc-text">跳表：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.6.</span> <span class="toc-text">整数集合：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.7.</span> <span class="toc-text">压缩链表：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.8.</span> <span class="toc-text">对象：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.9.</span> <span class="toc-text">字符串对象：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.10.</span> <span class="toc-text">列表对象：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.11.</span> <span class="toc-text">哈希对象：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.12.</span> <span class="toc-text">集合对象：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">1.13.</span> <span class="toc-text">有续集合对象：</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">第二部分 单机数据库的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.1.</span> <span class="toc-text">一、数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.2.</span> <span class="toc-text">二、RDB持久化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.3.</span> <span class="toc-text">三、AOF持久化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.4.</span> <span class="toc-text">四、事件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.5.</span> <span class="toc-text">五、客户端</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">2.6.</span> <span class="toc-text">六、服务器</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">第三部分 多机数据库的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.1.</span> <span class="toc-text">一、复制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.2.</span> <span class="toc-text">二、Sentinel（哨兵）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-number">3.3.</span> <span class="toc-text">三、集群</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">第四部分 独立功能的实现</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/30/redis%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/" title="redis的设计与实现">redis的设计与实现</a><time datetime="2023-07-30T07:35:59.103Z" title="发表于 2023-07-30 15:35:59">2023-07-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/30/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%AF%B9%E6%AF%94/" title="消息队列对比">消息队列对比</a><time datetime="2023-07-30T06:18:18.328Z" title="发表于 2023-07-30 14:18:18">2023-07-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/11/linux%E5%86%85%E6%A0%B8%E7%AD%96%E7%95%A5/" title="linux内核">linux内核</a><time datetime="2023-07-11T13:23:19.933Z" title="发表于 2023-07-11 21:23:19">2023-07-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/06/30/%E5%9C%A8%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E8%BE%93%E5%85%A5%E4%B8%80%E4%B8%AAurl,%E4%BC%9A%E7%BB%8F%E5%8E%86%E5%93%AA%E4%BA%9B%E8%BF%87%E7%A8%8B/" title="在浏览器中输入url，会经历哪些过程">在浏览器中输入url，会经历哪些过程</a><time datetime="2023-06-30T11:34:23.924Z" title="发表于 2023-06-30 19:34:23">2023-06-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/06/06/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/" title="网络编程的一些思考">网络编程的一些思考</a><time datetime="2023-06-06T09:30:37.533Z" title="发表于 2023-06-06 17:30:37">2023-06-06</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By bank</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="chat-btn" type="button" title="聊天"><i class="fas fa-sms"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
